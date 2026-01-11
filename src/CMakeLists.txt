@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 # import SDK
-set(PICO_SDK_PATH ../pico-sdk)
+set(PICO_SDK_PATH ${CMAKE_CURRENT_LIST_DIR}/../pico-sdk)
 include(${PICO_SDK_PATH}/pico_sdk_import.cmake)
 #include(pico_sdk_import.cmake)
 
