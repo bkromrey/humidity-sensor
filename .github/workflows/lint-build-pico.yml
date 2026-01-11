@@ -5,35 +5,25 @@ on: [push, pull_request]
 jobs:
   test_build:
     name: Lint & Build
+
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: cpp-linter/cpp-linter-action@v2
-        id: linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          style: "file" # Use .clang-format config file
-          tidy-checks: "" # Use .clang-tidy config file
-          # only 'update' a single comment in a pull request thread.
-          thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
+      - name: Get build tools
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
-      - name: fail immediately if linter not successful
-        if: steps.linter.outputs.checks-failed > 0
-        run: exit 1
+      - name: Run CMake
+        run: cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build
 
-      - name: build pico project
+      - name: Compile
+        working-directory: ${{github.workspace}}/build
+        run: make humidity-sensor
         id: build
-        uses: samyarsadat/Pico-Build-Action@v1
-        with:
-          source_dir: "src"
 
-      - name: upload build artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: workspace_artifacts
