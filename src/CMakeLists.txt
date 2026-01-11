@@ -1,13 +1,28 @@
 cmake_minimum_required(VERSION 3.12)
 
 # import SDK
-include(pico_sdk_import.cmake)
+set(PICO_SDK_PATH ../pico-sdk)
+include(${PICO_SDK_PATH}/pico_sdk_import.cmake)
+#include(pico_sdk_import.cmake)
 
 # set the name of the project
 project(humidity-sensor)
 
+# building for original pico board
+set(PICO_BOARD "pico")
+
 # define CMake build type
 set(CMAKE_BUILD_TYPE Debug)
+
+# define C standard
+set(CMAKE_C_STANDARD 11)
+
+# define compiler
+set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
+
+# use this to prevent clang-tidy from failing to find pico libs
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
 
 # initialize SDK
 pico_sdk_init()
