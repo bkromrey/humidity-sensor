@@ -16,20 +16,9 @@ void LED_Array_Init(const uint *led_pins, uint pin_number){
   }
 }
 
-uint First_Digit_Index(uint x){
-  // Find first digit
-  while (x >= 10){
-    x /= 10;
-  }
-
-  return (x <= Pin_Number - 1) ? x : Pin_Number - 1;
-}
 
 // Write value [0, Pin_Number] to LED Array
-void Display_LED_Array(uint value){
-  
-  // Convert to index to display
-  uint end_index = First_Digit_Index(value);
+void Display_LED_Array(uint end_index){
 
   // led on mask
   uint32_t led_on_mask = 0;
