@@ -86,7 +86,6 @@ int main() {
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
-
   while (true) {
     if (Increment && LED_Value < LED_LENGTH){
       LED_Value++;
