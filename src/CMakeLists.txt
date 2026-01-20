@@ -23,14 +23,16 @@ set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
 # use this to prevent clang-tidy from failing to find pico libs
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
-
 # initialize SDK
 pico_sdk_init()
 
 # define files & libraries
 add_executable(humidity-sensor
         main.c
+        hardware/led_array.c
         )
+
+pico_enable_stdio_usb(humidity-sensor 1)
 
 target_link_libraries(humidity-sensor pico_stdlib)
 
