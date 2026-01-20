@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
 #include "hardware/gpio.h"
+#include "pico/time.h"
 
 // User Modules
 #include "hardware/led_array.h"
@@ -15,7 +16,7 @@
 #define DEBUG 0
 
 // Buttons
-#define BUTTON_DEBOUNCE 100 // Units
+#define BUTTON_DEBOUNCE 50 // ms
 #define BUTTONS_LENGTH 3
 #define BUTTON_1 16
 #define BUTTON_2 17
@@ -58,16 +59,29 @@ volatile bool Increment = false;
 volatile bool Decrement = false;
 volatile bool Set_Zero = false;
 
+bool system_timer_callback(struct repeating_timer *t){
+  if (Button_1_Disabled)
+    Button_1_Disabled--;
+
+  if (Button_2_Disabled)
+    Button_2_Disabled--;
+
+  if (Button_3_Disabled)
+    Button_3_Disabled--;
+
+  return true;
+}
+
 void GPIO_Handler(uint gpio, uint32_t event_mask){
-  if (gpio == BUTTON_1 && !Button_1_Disabled){
+  if (gpio == BUTTON_1 && Button_1_Disabled == 0){
     Decrement = true;
     Button_1_Disabled = BUTTON_DEBOUNCE;
   }
-  if (gpio == BUTTON_2 && !Button_2_Disabled){
+  if (gpio == BUTTON_2 && Button_2_Disabled == 0){
     Increment = true;
     Button_2_Disabled = BUTTON_DEBOUNCE;
   }
-  if (gpio == BUTTON_3 && !Button_3_Disabled){
+  if (gpio == BUTTON_3 && Button_3_Disabled == 0){
     Set_Zero = true;
     Button_3_Disabled = BUTTON_DEBOUNCE;
   }
@@ -78,6 +92,8 @@ int main() {
   stdio_init_all();
 
   // System Timer
+  struct repeating_timer timer;
+  add_repeating_timer_ms(-1, system_timer_callback, NULL, &timer);
 
   // Buttons
   Button_Init(Buttons, BUTTONS_LENGTH);
