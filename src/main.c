@@ -1,5 +1,6 @@
 // Standard Library
 #include <stdbool.h>
+#include <stdio.h>
 
 // Pico SDK
 #include "pico/stdlib.h"
@@ -8,6 +9,9 @@
 
 // User Modules
 #include "hardware/led_array.h"
+
+// Debug Mode - enable or disable bc printf to UART is slow
+#define DEBUG true
 
 // Buttons
 #define BUTTONS_LENGTH 3
@@ -30,7 +34,7 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 #define LCD_I2C_SDA 0
 #define LCD_I2C_SCL 2
 
-// Sensor I2C
+// Humidity Sensor I2C
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
 
@@ -82,8 +86,9 @@ int main() {
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
+
   while (true) {
-    if (Increment && LED_Value < LED_LENGTH + 1){
+    if (Increment && LED_Value < LED_LENGTH){
       LED_Value++;
       Increment = false;
     }
@@ -95,6 +100,12 @@ int main() {
       LED_Value = 0;
       Set_Zero = false;
     }
+  
+    // printf for UART debugging only if debug mode enabled
+    if (DEBUG) {
+      printf("LED_Value is: %d\r\n", LED_Value);
+    }
+
     Display_LED_Array(LED_Value);
   }
 

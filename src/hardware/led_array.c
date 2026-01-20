@@ -17,9 +17,9 @@ void LED_Array_Init(const uint *led_pins, uint pin_number){
 }
 
 
-// Write value [0, Pin_Number + 1] to LED Array
+// Write value [0, Pin_Number] to LED Array
 // 0 - no LEDS
-// Pin_Number + 1, all LEDs
+// Pin_Number, all LEDs
 void Display_LED_Array(uint end_index){
 
   // led on mask
