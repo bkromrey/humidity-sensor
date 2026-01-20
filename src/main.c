@@ -9,11 +9,13 @@
 
 // User Modules
 #include "hardware/led_array.h"
+#include "hardware/buttons.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG true
+#define DEBUG 0
 
 // Buttons
+#define BUTTON_DEBOUNCE 100 // Units
 #define BUTTONS_LENGTH 3
 #define BUTTON_1 16
 #define BUTTON_2 17
@@ -41,6 +43,11 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
 
+// Buttons
+volatile uint Button_1_Disabled = 0;
+volatile uint Button_2_Disabled = 0;
+volatile uint Button_3_Disabled = 0;
+
 // Output Flag
 volatile uint Output_Flag = 0;
 const uint Output_Screens = 2;
@@ -52,36 +59,29 @@ volatile bool Decrement = false;
 volatile bool Set_Zero = false;
 
 void GPIO_Handler(uint gpio, uint32_t event_mask){
-  switch (gpio){
-    case BUTTON_1:
-      Decrement = true;
-      break;
-    case BUTTON_2:
-      Increment = true;
-      break;
-    case BUTTON_3:
-      Set_Zero = true;
-      break;
+  if (gpio == BUTTON_1 && !Button_1_Disabled){
+    Decrement = true;
+    Button_1_Disabled = BUTTON_DEBOUNCE;
   }
-}
-
-void Button_Init(uint button_pin){
-  gpio_init(button_pin);
-  gpio_set_dir(button_pin, GPIO_IN);
-  gpio_pull_up(button_pin);
+  if (gpio == BUTTON_2 && !Button_2_Disabled){
+    Increment = true;
+    Button_2_Disabled = BUTTON_DEBOUNCE;
+  }
+  if (gpio == BUTTON_3 && !Button_3_Disabled){
+    Set_Zero = true;
+    Button_3_Disabled = BUTTON_DEBOUNCE;
+  }
 }
 
 int main() {
   // Needed for picotool
   stdio_init_all();
 
+  // System Timer
+
   // Buttons
-  for (uint i = 0; i < BUTTONS_LENGTH; i++){
-    Button_Init(Buttons[i]);
-  }
-  gpio_set_irq_enabled_with_callback(BUTTON_1, GPIO_IRQ_EDGE_FALL, true, &GPIO_Handler);
-  gpio_set_irq_enabled(BUTTON_2, GPIO_IRQ_EDGE_FALL, true);
-  gpio_set_irq_enabled(BUTTON_3, GPIO_IRQ_EDGE_FALL, true);
+  Button_Init(Buttons, BUTTONS_LENGTH);
+  GPIO_Interrupt_Init(GPIO_Handler);
 
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
@@ -102,9 +102,9 @@ int main() {
     }
   
     // printf for UART debugging only if debug mode enabled
-    if (DEBUG) {
+    #if DEBUG
       printf("LED_Value is: %d\r\n", LED_Value);
-    }
+    #endif
 
     Display_LED_Array(LED_Value);
   }
