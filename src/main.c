@@ -16,7 +16,7 @@
 #define DEBUG 0
 
 // Buttons
-#define BUTTON_DEBOUNCE 50 // ms
+#define BUTTON_DEBOUNCE 100 // ms
 #define BUTTONS_LENGTH 3
 #define BUTTON_1 16
 #define BUTTON_2 17
