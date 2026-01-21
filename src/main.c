@@ -9,9 +9,10 @@
 
 // User Modules
 #include "hardware/led_array.h"
+#include "hardware/dht20_sensor.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG true
+#define DEBUG false
 
 // Buttons
 #define BUTTONS_LENGTH 3
@@ -85,6 +86,9 @@ int main() {
 
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
+
+  // initialize dht20_sensor
+  setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL);
 
 
   while (true) {
