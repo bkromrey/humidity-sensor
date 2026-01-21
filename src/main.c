@@ -50,7 +50,7 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 #define PHOTORESISTOR_ADC 26
 
 // Test Globals
-uint LED_Value;
+uint LED_Value = 0;
 
 bool system_timer_callback(struct repeating_timer *t){
   // decrement buttons disabled count
