@@ -3,7 +3,15 @@
 
 #include "pico/stdlib.h"
 
-void Button_Init(uint *buttons, uint button_number);
+// Global Data Types
+typedef struct {
+    uint button_pin;
+    uint disabled_count;
+    uint reset_value;
+    bool flag;
+} Button;
+
+void Button_Init(Button *button_array, uint num_buttons);
 void GPIO_Interrupt_Init(void(*handler)(uint, uint32_t));
 
 #endif

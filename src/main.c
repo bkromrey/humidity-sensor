@@ -17,11 +17,16 @@
 
 // Buttons
 #define BUTTON_DEBOUNCE 100 // ms
-#define BUTTONS_LENGTH 3
+#define NUM_BUTTONS 3
 #define BUTTON_1 16
 #define BUTTON_2 17
 #define BUTTON_3 18
-uint Buttons[BUTTONS_LENGTH] = {BUTTON_1, BUTTON_2, BUTTON_3};
+
+Button Button_Array[NUM_BUTTONS] = {
+  {BUTTON_1, 0, BUTTON_DEBOUNCE, false},
+  {BUTTON_2, 0, BUTTON_DEBOUNCE, false},
+  {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
+};
 
 // LED Array
 #define LED_LENGTH 6
@@ -44,46 +49,24 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
 
-// Buttons
-volatile uint Button_1_Disabled = 0;
-volatile uint Button_2_Disabled = 0;
-volatile uint Button_3_Disabled = 0;
-
-// Output Flag
-volatile uint Output_Flag = 0;
-const uint Output_Screens = 2;
-
-// Test 
-uint LED_Value = 0;
-volatile bool Increment = false;
-volatile bool Decrement = false;
-volatile bool Set_Zero = false;
+// Test Globals
+uint LED_Value;
 
 bool system_timer_callback(struct repeating_timer *t){
-  if (Button_1_Disabled)
-    Button_1_Disabled--;
-
-  if (Button_2_Disabled)
-    Button_2_Disabled--;
-
-  if (Button_3_Disabled)
-    Button_3_Disabled--;
-
+  // decrement buttons disabled count
+  for(Button *ptr = Button_Array; ptr < Button_Array + NUM_BUTTONS ;ptr++){
+    if(ptr->disabled_count)
+      ptr->disabled_count--;
+  }
   return true;
 }
 
 void GPIO_Handler(uint gpio, uint32_t event_mask){
-  if (gpio == BUTTON_1 && Button_1_Disabled == 0){
-    Decrement = true;
-    Button_1_Disabled = BUTTON_DEBOUNCE;
-  }
-  if (gpio == BUTTON_2 && Button_2_Disabled == 0){
-    Increment = true;
-    Button_2_Disabled = BUTTON_DEBOUNCE;
-  }
-  if (gpio == BUTTON_3 && Button_3_Disabled == 0){
-    Set_Zero = true;
-    Button_3_Disabled = BUTTON_DEBOUNCE;
+  for(Button *ptr = Button_Array; ptr < Button_Array + NUM_BUTTONS ;ptr++){
+    if(ptr->button_pin == gpio && ptr->disabled_count == 0){
+      ptr->flag = true;
+      ptr->disabled_count = ptr->reset_value;
+    }
   }
 }
 
@@ -96,24 +79,24 @@ int main() {
   add_repeating_timer_ms(-1, system_timer_callback, NULL, &timer);
 
   // Buttons
-  Button_Init(Buttons, BUTTONS_LENGTH);
+  Button_Init(Button_Array, NUM_BUTTONS);
   GPIO_Interrupt_Init(GPIO_Handler);
 
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
   while (true) {
-    if (Increment && LED_Value < LED_LENGTH){
+    if (Button_Array[1].flag && LED_Value < LED_LENGTH){
       LED_Value++;
-      Increment = false;
+      Button_Array[1].flag = false;
     }
-    if (Decrement && LED_Value > 0){
+    if (Button_Array[0].flag && LED_Value > 0){
       LED_Value--;
-      Decrement = false;
+      Button_Array[0].flag = false;
     }
-    if (Set_Zero){
+    if (Button_Array[2].flag){
       LED_Value = 0;
-      Set_Zero = false;
+      Button_Array[2].flag = false;
     }
   
     // printf for UART debugging only if debug mode enabled
