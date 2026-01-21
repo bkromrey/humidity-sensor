@@ -6,9 +6,9 @@
 // Global Data Types
 typedef struct {
     uint button_pin;
-    uint disabled_count;
+    volatile uint disabled_count;
     uint reset_value;
-    bool flag;
+    volatile bool flag;
 } Button;
 
 void Button_Init(Button *button_array, uint num_buttons);

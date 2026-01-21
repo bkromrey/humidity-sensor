@@ -54,18 +54,39 @@ uint LED_Value;
 
 bool system_timer_callback(struct repeating_timer *t){
   // decrement buttons disabled count
-  for(Button *ptr = Button_Array; ptr < Button_Array + NUM_BUTTONS ;ptr++){
-    if(ptr->disabled_count)
-      ptr->disabled_count--;
+  for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
+    if(btn->disabled_count)
+      btn->disabled_count--;
   }
   return true;
 }
 
 void GPIO_Handler(uint gpio, uint32_t event_mask){
-  for(Button *ptr = Button_Array; ptr < Button_Array + NUM_BUTTONS ;ptr++){
-    if(ptr->button_pin == gpio && ptr->disabled_count == 0){
-      ptr->flag = true;
-      ptr->disabled_count = ptr->reset_value;
+  for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
+    if(btn->button_pin == gpio && btn->disabled_count == 0){
+      btn->flag = true;
+      btn->disabled_count = btn->reset_value;
+    }
+  }
+}
+
+void Button_Logic(void){
+  for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
+    if (btn->flag){
+      switch (btn->button_pin){
+        case BUTTON_1:
+          if (LED_Value > 0)
+            LED_Value--;
+          break;
+        case BUTTON_2:
+          if (LED_Value < LED_LENGTH)
+            LED_Value++;
+          break;
+        case BUTTON_3:
+          LED_Value = 0;
+          break;
+      }
+      btn->flag = false;
     }
   }
 }
@@ -86,19 +107,8 @@ int main() {
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
   while (true) {
-    if (Button_Array[1].flag && LED_Value < LED_LENGTH){
-      LED_Value++;
-      Button_Array[1].flag = false;
-    }
-    if (Button_Array[0].flag && LED_Value > 0){
-      LED_Value--;
-      Button_Array[0].flag = false;
-    }
-    if (Button_Array[2].flag){
-      LED_Value = 0;
-      Button_Array[2].flag = false;
-    }
-  
+    Button_Logic();
+
     // printf for UART debugging only if debug mode enabled
     #if DEBUG
       printf("LED_Value is: %d\r\n", LED_Value);
