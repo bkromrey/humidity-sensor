@@ -1,6 +1,10 @@
 #ifndef __BUTTONS_H_
 #define __BUTTONS_H_
 
+// Standard Library
+#include "stdbool.h"
+
+// Pico SDK
 #include "pico/stdlib.h"
 
 // Global Data Types

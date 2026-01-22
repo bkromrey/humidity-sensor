@@ -5,8 +5,9 @@
 // Pico SDK
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
-#include "hardware/gpio.h"
 #include "pico/time.h"
+#include "hardware/gpio.h"
+#include "hardware/sync.h"
 
 // User Modules
 #include "hardware/led_array.h"
@@ -53,11 +54,14 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 uint LED_Value = 0;
 
 bool system_timer_callback(struct repeating_timer *t){
+  // protect critical section
+  uint32_t status = save_and_disable_interrupts();
   // decrement buttons disabled count
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     if(btn->disabled_count)
       btn->disabled_count--;
   }
+  restore_interrupts(status);
   return true;
 }
 
@@ -72,8 +76,18 @@ void GPIO_Handler(uint gpio, uint32_t event_mask){
 
 void Button_Logic(void){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
-    if (btn->flag){
-      switch (btn->button_pin){
+    // handle race condition
+    uint32_t status = save_and_disable_interrupts();
+    // Save State
+    bool flag_local = btn->flag;
+    uint button_pin_local = btn->button_pin;
+    // Consume Flag
+    btn->flag = false;
+    restore_interrupts(status);
+
+    // button logic
+    if (flag_local){
+      switch (button_pin_local){
         case BUTTON_1:
           if (LED_Value > 0)
             LED_Value--;
@@ -86,7 +100,6 @@ void Button_Logic(void){
           LED_Value = 0;
           break;
       }
-      btn->flag = false;
     }
   }
 }
