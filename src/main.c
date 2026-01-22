@@ -56,6 +56,7 @@ uint LED_Value = 0;
 bool system_timer_callback(struct repeating_timer *t){
   // protect critical section
   uint32_t status = save_and_disable_interrupts();
+  
   // decrement buttons disabled count
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     if(btn->disabled_count)
@@ -78,9 +79,11 @@ void Button_Logic(void){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     // handle race condition
     uint32_t status = save_and_disable_interrupts();
+
     // Save State
     bool flag_local = btn->flag;
     uint button_pin_local = btn->button_pin;
+
     // Consume Flag
     btn->flag = false;
     restore_interrupts(status);
