@@ -37,7 +37,7 @@ Button Button_Array[NUM_BUTTONS] = {
 #define LED_PIN_3 13
 #define LED_PIN_4 14
 #define LED_PIN_5 15
-uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
+uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
 
 // LCD I2C
 #define LCD_I2C_SDA 0
@@ -51,7 +51,7 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 #define PHOTORESISTOR_ADC 26
 
 // Test Globals
-uint LED_Value = 0;
+uint32_t LED_Value = 0;
 
 bool system_timer_callback(struct repeating_timer *t){
   // protect critical section
@@ -82,7 +82,7 @@ void Button_Logic(void){
 
     // Save State
     bool flag_local = btn->flag;
-    uint button_pin_local = btn->button_pin;
+    uint32_t button_pin_local = btn->button_pin;
 
     // Consume Flag
     btn->flag = false;
@@ -127,7 +127,7 @@ int main() {
 
     // printf for UART debugging only if debug mode enabled
     #if DEBUG
-      static uint led_value_old = 0;
+      static uint32_t led_value_old = 0;
       if (LED_Value != led_value_old){
         printf("LED_Value is: %d\r\n", LED_Value);
         led_value_old = LED_Value;

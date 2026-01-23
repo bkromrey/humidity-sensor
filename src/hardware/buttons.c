@@ -3,16 +3,16 @@
 
 // Globals
 static Button *Button_Array_Local;
-static uint Num_Buttons_Local = 0;
+static uint32_t Num_Buttons_Local = 0;
 
 // initialize each gpio pin as a pull-up switch
-void GPIO_Init(uint button_pin){
+void GPIO_Init(uint32_t button_pin){
     gpio_init(button_pin);
     gpio_set_dir(button_pin, GPIO_IN);
     gpio_pull_up(button_pin);
 }
 
-void Button_Init(Button *button_array, uint num_buttons){
+void Button_Init(Button *button_array, uint32_t num_buttons){
     // set Globals
     Button_Array_Local = button_array;
     Num_Buttons_Local = num_buttons;
