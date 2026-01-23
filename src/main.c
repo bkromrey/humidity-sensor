@@ -18,7 +18,7 @@
 #include "core1/core1.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG 0
+#define DEBUG 1
 
 // Buttons
 #define BUTTON_DEBOUNCE 100 // ms
@@ -27,10 +27,15 @@
 #define BUTTON_2 17
 #define BUTTON_3 18
 
+// Button Handler Prtotypes
+void Button_1_Handler(void);
+void Button_2_Handler(void);
+void Button_3_Handler(void);
+
 Button Button_Array[NUM_BUTTONS] = {
-  {BUTTON_1, 0, BUTTON_DEBOUNCE, false},
-  {BUTTON_2, 0, BUTTON_DEBOUNCE, false},
-  {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
+  {BUTTON_1, 0, BUTTON_DEBOUNCE, false, Button_1_Handler},
+  {BUTTON_2, 0, BUTTON_DEBOUNCE, false, Button_2_Handler},
+  {BUTTON_3, 0, BUTTON_DEBOUNCE, false, Button_3_Handler},
 };
 
 // LED Array
@@ -61,6 +66,21 @@ Payload_Data Data_Buffer[MAX_BUFFER_SIZE];
 // Test Globals
 uint32_t LED_Value = 0;
 
+void Button_1_Handler(void){
+  if(LED_Value > 0)
+    LED_Value--;
+}
+
+void Button_2_Handler(void){
+  if(LED_Value < LED_LENGTH)
+    LED_Value++;  
+}
+
+void Button_3_Handler(void){
+  LED_Value = 0;  
+}
+
+
 bool system_timer_callback(struct repeating_timer *t){
   // protect critical section
   uint32_t status = save_and_disable_interrupts();
@@ -77,9 +97,9 @@ bool system_timer_callback(struct repeating_timer *t){
 
 void GPIO_Handler(uint gpio, uint32_t event_mask){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
-    if(btn->button_pin == gpio && btn->disabled_count == 0){
-      btn->flag = true;
-      btn->disabled_count = btn->reset_value;
+    if(btn->button_pin == gpio && btn->disabled_count == 0){  // if this button is the pin that's been pressed and it's not disabled
+      btn->flag = true;                                       // set flag to true, pressed
+      btn->disabled_count = btn->reset_value;                 // resetd disabled counter 
     }
   }
 }
@@ -91,30 +111,16 @@ void Button_Logic(void){
 
     // Save State
     bool flag_local = btn->flag;
-    uint32_t button_pin_local = btn->button_pin;
-
     // Consume Flag
-    btn->flag = false;
+    btn->flag = false; // set flag to not pressed, system_timer_callback handles the delay decrements, GPIO_Handler resets this value
     restore_interrupts(status);
 
     // button logic
-    if (flag_local){
-      switch (button_pin_local){
-        case BUTTON_1:
-          if (LED_Value > 0)
-            LED_Value--;
-          break;
-        case BUTTON_2:
-          if (LED_Value < LED_LENGTH)
-            LED_Value++;
-          break;
-        case BUTTON_3:
-          LED_Value = 0;
-          break;
-      }
-    }
+    if (flag_local)
+      btn->button_handler();
   }
 }
+
 
 int main() {
   // Needed for picotool
