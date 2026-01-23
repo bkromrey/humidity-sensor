@@ -127,7 +127,11 @@ int main() {
 
     // printf for UART debugging only if debug mode enabled
     #if DEBUG
-      printf("LED_Value is: %d\r\n", LED_Value);
+      static uint led_value_old = 0;
+      if (LED_Value != led_value_old){
+        printf("LED_Value is: %d\r\n", LED_Value);
+        led_value_old = LED_Value;
+      }
     #endif
 
     Display_LED_Array(LED_Value);
