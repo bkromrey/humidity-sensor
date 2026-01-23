@@ -1,5 +1,5 @@
-#ifndef __BUTTONS_H_
-#define __BUTTONS_H_
+#ifndef __BUTTONS_H__
+#define __BUTTONS_H__
 
 // Standard Library
 #include "stdbool.h"
@@ -12,7 +12,7 @@ typedef struct {
     uint32_t button_pin;
     volatile uint32_t disabled_count;
     uint32_t reset_value;
-    volatile bool flag;
+    volatile bool flag
 } Button;
 
 void Button_Init(Button *button_array, uint32_t num_buttons);

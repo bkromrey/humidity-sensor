@@ -1,17 +1,21 @@
 // Standard Library
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 
 // Pico SDK
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
 #include "pico/time.h"
+#include "pico/multicore.h"
 #include "hardware/gpio.h"
 #include "hardware/sync.h"
 
 // User Modules
 #include "hardware/led_array.h"
 #include "hardware/buttons.h"
+#include "data_flow/data_flow.h" // data types shared between main and core1
+#include "core1/core1.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
 #define DEBUG 0
@@ -50,6 +54,10 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
 
+// Shared RAM with Core1, this will be our payload data from sampling
+#define MAX_BUFFER_SIZE 100
+Payload_Data Data_Buffer[MAX_BUFFER_SIZE];
+
 // Test Globals
 uint32_t LED_Value = 0;
 
@@ -62,6 +70,7 @@ bool system_timer_callback(struct repeating_timer *t){
     if(btn->disabled_count)
       btn->disabled_count--;
   }
+
   restore_interrupts(status);
   return true;
 }
@@ -121,6 +130,9 @@ int main() {
 
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
+
+  // Launch Core 1
+  multicore_launch_core1(Core_1_Entry);
 
   while (true) {
     Button_Logic();
