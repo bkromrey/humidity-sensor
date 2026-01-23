@@ -1,7 +1,9 @@
 #include "core1.h"
 
-// File Scope Datatypes
+// ADC Pin
+#define PHOTORESISTOR_ADC 26
 
+// File Scope Datatypes
 typedef struct {
     volatile uint32_t disabled_count;
     uint32_t reset_value;
@@ -21,7 +23,8 @@ System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
 };
 
 void Sample_Data(void){
-    printf("Hi from Core 1!\r\n");
+    uint16_t raw = adc_read();
+    printf("raw is: %d\r\n", raw);
 }
 
 bool Core_1_Timer_Callback(struct repeating_timer *t){
@@ -57,7 +60,16 @@ void System_Flag_Logic(void){
     }
 }
 
+void ADC_Init(){
+    adc_init();
+    adc_gpio_init(PHOTORESISTOR_ADC);
+    adc_select_input(PHOTORESISTOR_ADC - 26); // Pins 26-29 are ADC pins on the pico
+}
+
 void Core_1_Entry(void){
+    // ADC for the photoresistor
+    ADC_Init();
+
     // Core 1 Timer
     struct repeating_timer timer;
     add_repeating_timer_ms(-1, Core_1_Timer_Callback, NULL, & timer);

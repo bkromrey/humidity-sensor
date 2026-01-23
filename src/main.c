@@ -18,7 +18,7 @@
 #include "core1/core1.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG 1
+#define DEBUG 0
 
 // Buttons
 #define BUTTON_DEBOUNCE 100 // ms
@@ -55,9 +55,6 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 // Humidity Sensor I2C
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
-
-// ADC Pin
-#define PHOTORESISTOR_ADC 26
 
 // Shared RAM with Core1, this will be our payload data from sampling
 #define MAX_BUFFER_SIZE 100
@@ -151,6 +148,14 @@ int main() {
         led_value_old = LED_Value;
       }
     #endif
+
+    // Check if data is ready to be output
+    /*
+    if(multicore_fifo_rvalid()){
+      data = multicor_fifo_pop_blocking();
+    }
+    */
+
 
     Display_LED_Array(LED_Value);
   }

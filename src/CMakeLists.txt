@@ -36,7 +36,11 @@ add_executable(humidity-sensor
 
 pico_enable_stdio_usb(humidity-sensor 1)
 
-target_link_libraries(humidity-sensor pico_stdlib pico_multicore)
+target_link_libraries(humidity-sensor 
+        pico_stdlib 
+        pico_multicore
+        hardware_adc
+        )
 
 add_compile_options(-Wall
         -Wno-format

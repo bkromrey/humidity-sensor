@@ -9,6 +9,7 @@
 // Pico SDK
 #include "pico/time.h"
 #include "hardware/sync.h"
+#include "hardware/adc.h"
 
 // Main Process
 void Core_1_Entry(void);
