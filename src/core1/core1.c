@@ -33,11 +33,14 @@ Ring_Buffer Data_Ring_Buffer = {
 Payload_Data *Get_Storage(void){
     uint16_t next = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
     if(next != Data_Ring_Buffer.tail){ // space available
-        Data_Ring_Buffer.head = next;
         return &Data_Ring_Buffer.buffer[next];
     } else {
         return NULL;
     }
+}
+
+void Commit_Storage(){
+    Data_Ring_Buffer.head = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
 }
 
 
@@ -49,6 +52,7 @@ void Produce_Data(void){
 
     uint16_t raw = adc_read();
     Produce_Storage->ADC_Data = raw;
+    Commit_Storage();
 }
 
 bool Core_1_Timer_Callback(struct repeating_timer *t){
