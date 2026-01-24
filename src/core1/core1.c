@@ -33,7 +33,7 @@ Ring_Buffer Data_Ring_Buffer = {
 Payload_Data *Get_Storage(void){
     uint16_t next = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
     if(next != Data_Ring_Buffer.tail){ // space available
-        return &Data_Ring_Buffer.buffer[next];
+        return &Data_Ring_Buffer.buffer[Data_Ring_Buffer.head];
     } else {
         return NULL;
     }
