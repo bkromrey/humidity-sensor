@@ -48,6 +48,10 @@ Button Button_Array[NUM_BUTTONS] = {
 #define LED_PIN_5 15
 uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
 
+// ADC Conversion
+#define ADC_MAX 3200
+#define ADC_MIN 100
+
 // LCD I2C
 #define LCD_I2C_SDA 0
 #define LCD_I2C_SCL 2
@@ -55,10 +59,6 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 // Humidity Sensor I2C
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
-
-// Shared RAM with Core1, this will be our payload data from sampling
-#define MAX_BUFFER_SIZE 100
-Payload_Data Data_Buffer[MAX_BUFFER_SIZE];
 
 // Test Globals
 uint32_t LED_Value = 0;
@@ -118,6 +118,18 @@ void Button_Logic(void){
   }
 }
 
+void Process_Data(void){
+  while(Data_Ring_Buffer.head != Data_Ring_Buffer.tail){
+    Payload_Data data_copy = Data_Ring_Buffer.buffer[Data_Ring_Buffer.tail]; // index the buffer with the tail value
+
+    // Increment tail
+    Data_Ring_Buffer.tail = (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
+
+    // Do something with the data
+    printf("Index: %d\r\n",Data_Ring_Buffer.tail);
+    printf("ADC Data: %d\r\n",data_copy.ADC_Data);
+  }
+}
 
 int main() {
   // Needed for picotool
@@ -148,14 +160,8 @@ int main() {
         led_value_old = LED_Value;
       }
     #endif
-
-    // Check if data is ready to be output
-    /*
-    if(multicore_fifo_rvalid()){
-      data = multicor_fifo_pop_blocking();
-    }
-    */
-
+    
+    Process_Data();
 
     Display_LED_Array(LED_Value);
   }

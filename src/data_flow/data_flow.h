@@ -4,8 +4,10 @@
 #include <stdint.h>
 
 typedef struct {
-    uint64_t time_stamp;
-    uint16_t ADC_Data; // this only has 12 bits of precision, we lose 4 bits
+    volatile uint64_t time_stamp;
+    volatile uint16_t ADC_Data; // this only has 12 bits of precision, we lose 4 bits
+    volatile uint32_t Humidity_Data; // place holders for when we implement this
+    volatile uint32_t Temperature_Data;
 } Payload_Data;
 
 #endif

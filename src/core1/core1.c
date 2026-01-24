@@ -10,21 +10,45 @@ typedef struct {
     void (*flag_handler)(void); // call back when flag triggers
 } System_Flag;
 
-
 // System Flag Handling
 #define NUM_SYSTEM_FLAGS 1
 #define SYSTEM_RELOAD 1000 // ms
 
 // Flags
-void Sample_Data(void);
+void Produce_Data(void);
 
 System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
- {0, SYSTEM_RELOAD, Sample_Data}, // Sample Data Flag
+ {0, SYSTEM_RELOAD, Produce_Data}, // Sample Data Flag
 };
 
-void Sample_Data(void){
+// Buffer for trasferring data to Core 0
+Payload_Data Data_Buffer[DATA_BUFFER_SIZE];
+Ring_Buffer Data_Ring_Buffer = {
+    .head = 0,
+    .tail = 0,
+    .buffer = Data_Buffer,
+};
+
+// Returns a Payload_Data pointer if there is space, null if not
+Payload_Data *Get_Storage(void){
+    uint16_t next = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
+    if(next != Data_Ring_Buffer.tail){ // space available
+        Data_Ring_Buffer.head = next;
+        return &Data_Ring_Buffer.buffer[next];
+    } else {
+        return NULL;
+    }
+}
+
+
+void Produce_Data(void){
+    // Check if there is Free Space
+    Payload_Data *Produce_Storage = Get_Storage();
+    if(Produce_Storage == NULL)
+        return;
+
     uint16_t raw = adc_read();
-    printf("raw is: %d\r\n", raw);
+    Produce_Storage->ADC_Data = raw;
 }
 
 bool Core_1_Timer_Callback(struct repeating_timer *t){
