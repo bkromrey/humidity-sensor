@@ -39,19 +39,20 @@ Payload_Data *Get_Storage(void){
     }
 }
 
+// Advances head of the ring buffer to show there is new data produced
 void Commit_Storage(){
     Data_Ring_Buffer.head = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
 }
 
-
 void Produce_Data(void){
     // Check if there is Free Space
-    Payload_Data *Produce_Storage = Get_Storage();
-    if(Produce_Storage == NULL)
+    Payload_Data *Producer_Storage = Get_Storage();
+    if(Producer_Storage == NULL)
         return;
 
     uint16_t raw = adc_read();
-    Produce_Storage->ADC_Data = raw;
+    Producer_Storage->ADC_Data = raw;
+    Producer_Storage->time_stamp = 0;
     Commit_Storage();
 }
 
@@ -65,7 +66,7 @@ bool Core_1_Timer_Callback(struct repeating_timer *t){
             flg->disabled_count--;
         }
     }
-    restore_interrupts(status);
+    restore_interrupts(status); // advance head to show it has new data
     return true;
 }
 
