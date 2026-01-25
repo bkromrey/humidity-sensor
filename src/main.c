@@ -72,7 +72,7 @@ int main()
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
-  // LCD I2C init (I2C0) b
+  // LCD I2C init (I2C0)
   i2c_init(LCD_I2C_PORT, 100 * 1000);
   gpio_set_function(LCD_I2C_SDA, GPIO_FUNC_I2C);
   gpio_set_function(LCD_I2C_SCL, GPIO_FUNC_I2C);
@@ -86,7 +86,8 @@ int main()
   // lcd_set_cursor(1, 0);
   // lcd_string("World");
 
-  mock_ui_run_10s();
+  // Run mock UI demonstration
+  mock_ui_run_lcd();
 
   while (true)
   {
