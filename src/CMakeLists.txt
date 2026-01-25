@@ -28,10 +28,19 @@ pico_sdk_init()
 
 # define files & libraries
 add_executable(humidity-sensor
-        main.c
-        hardware/led_array.c
-        hardware/lcd.c
-        )
+    main.c
+    hardware/lcd.c
+    hardware/led_array.c
+    ui/lcd_ui.c
+    ../mock/mock_ui.c
+)
+
+target_include_directories(humidity-sensor PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    hardware
+    ui
+    ../mock
+)
 
 pico_enable_stdio_usb(humidity-sensor 1)
 

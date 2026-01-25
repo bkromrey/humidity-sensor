@@ -1,3 +1,5 @@
+// low level lcd functions for 16x2 lcd with i2c backpack
+
 #include "lcd.h"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -18,10 +20,9 @@ static const int LCD_ENABLE_BIT = 0x04;
 #define LCD_CHARACTER  1
 #define LCD_COMMAND    0
 
-static int addr = LCD_I2C_ADDR;
 
 static void i2c_write_byte(uint8_t val) {
-    i2c_write_blocking(i2c0, addr, &val, 1, false);
+    i2c_write_blocking(LCD_I2C_PORT, LCD_I2C_ADDR, &val, 1, false);
 }
 
 static void lcd_toggle_enable(uint8_t val) {

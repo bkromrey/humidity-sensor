@@ -11,9 +11,13 @@
 // User Modules
 #include "hardware/led_array.h"
 #include "hardware/lcd.h"
+#include "ui/lcd_ui.h"
 
 // Configuration file; all hardware constants and settings here
 #include "config.h"
+
+// mock UI for testing
+#include "../mock/mock_ui.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
 #define DEBUG true
@@ -68,8 +72,8 @@ int main()
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
-  // LCD I2C init (I2C0)
-  i2c_init(i2c0, 100 * 1000);
+  // LCD I2C init (I2C0) b
+  i2c_init(LCD_I2C_PORT, 100 * 1000);
   gpio_set_function(LCD_I2C_SDA, GPIO_FUNC_I2C);
   gpio_set_function(LCD_I2C_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(LCD_I2C_SDA);
@@ -77,10 +81,12 @@ int main()
 
   // Initialize LCD
   lcd_init();
-  lcd_set_cursor(0, 0);
-  lcd_string("Hello");
-  lcd_set_cursor(1, 0);
-  lcd_string("World");
+  // lcd_set_cursor(0, 0);
+  // lcd_string("Hello");
+  // lcd_set_cursor(1, 0);
+  // lcd_string("World");
+
+  mock_ui_run_10s();
 
   while (true)
   {
