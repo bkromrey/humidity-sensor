@@ -35,7 +35,7 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 #define LCD_I2C_SDA 0
 #define LCD_I2C_SCL 2
 
-// Humidity Sensor I2C
+// Humidity Sensor I2C - identify based on GPIO pin #, not actual pin #
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
 
@@ -88,8 +88,12 @@ int main() {
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
   // initialize dht20_sensor
-  setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL);
-
+  if (!setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL)){
+    printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
+  }
+  
+ 
+  take_measurement();
 
   while (true) {
     if (Increment && LED_Value < LED_LENGTH){

@@ -9,7 +9,7 @@ include(${PICO_SDK_PATH}/pico_sdk_import.cmake)
 project(humidity-sensor)
 
 # building for original pico board
-set(PICO_BOARD "pico")
+set(PICO_BOARD "pico_w")
 
 # define CMake build type
 set(CMAKE_BUILD_TYPE Debug)
