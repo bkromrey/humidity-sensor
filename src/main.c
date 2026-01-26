@@ -20,8 +20,11 @@
 // Debug Mode - enable or disable bc printf to UART is slow
 #define DEBUG 0
 
+// System Interrupt Speed
+#define SYS_TIMER 20 // ms
+
 // Buttons
-#define BUTTON_DEBOUNCE 100 // ms
+#define BUTTON_DEBOUNCE 1 // 20 ms
 #define NUM_BUTTONS 3
 #define BUTTON_1 16
 #define BUTTON_2 17
@@ -137,7 +140,7 @@ int main() {
 
   // System Timer
   struct repeating_timer timer;
-  add_repeating_timer_ms(-1, system_timer_callback, NULL, &timer);
+  add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
 
   // Buttons
   Button_Init(Button_Array, NUM_BUTTONS);

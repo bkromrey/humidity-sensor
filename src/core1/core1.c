@@ -1,5 +1,7 @@
 #include "core1.h"
 
+#define CORE1_TIMER 1000
+
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
 
@@ -12,7 +14,7 @@ typedef struct {
 
 // System Flag Handling
 #define NUM_SYSTEM_FLAGS 1
-#define SYSTEM_RELOAD 1000 // ms
+#define SYSTEM_RELOAD 1 // 1000 ms
 
 // Flags
 void Produce_Data(void);
@@ -61,7 +63,7 @@ bool Core_1_Timer_Callback(struct repeating_timer *t){
     // protect critical section
     uint32_t status = save_and_disable_interrupts();
     
-    // decrement buttons disabled count
+    // Decrement Flag
     for(System_Flag *flg = Core_1_Flags; flg < Core_1_Flags + NUM_SYSTEM_FLAGS ; flg++){
         if(flg->disabled_count){
             flg->disabled_count--;
@@ -102,7 +104,7 @@ void Core_1_Entry(void){
 
     // Core 1 Timer
     struct repeating_timer timer;
-    add_repeating_timer_ms(-1, Core_1_Timer_Callback, NULL, & timer);
+    add_repeating_timer_ms(CORE1_TIMER, Core_1_Timer_Callback, NULL, & timer);
 
     while (true){
         // handle the flag here
