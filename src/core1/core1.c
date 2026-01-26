@@ -53,6 +53,7 @@ void Produce_Data(void){
     uint16_t raw = adc_read();
     Producer_Storage->ADC_Data = raw;
     Producer_Storage->time_stamp = 0;
+    __dmb(); // data memory barrier
     Commit_Storage();
 }
 

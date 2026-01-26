@@ -121,7 +121,7 @@ void Button_Logic(void){
 void Process_Data(void){
   while(Data_Ring_Buffer.head != Data_Ring_Buffer.tail){
     Payload_Data data_copy = Data_Ring_Buffer.buffer[Data_Ring_Buffer.tail]; // index the buffer with the tail value
-
+    __dmb(); // ensure payload reads before tail changes
     // Increment tail
     Data_Ring_Buffer.tail = (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
 
