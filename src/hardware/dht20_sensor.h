@@ -1,6 +1,8 @@
 // Standard libraries
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
+#include <math.h>
 
 // Pico SDK
 #include "pico/stdlib.h"

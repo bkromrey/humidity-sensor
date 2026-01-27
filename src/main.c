@@ -92,8 +92,12 @@ int main() {
     printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   }
   
- 
-  take_measurement();
+
+  // demo sensor
+  for (int i=0; i < 5; i++){ 
+    take_measurement();
+    sleep_ms(5000);
+  }
 
   while (true) {
     if (Increment && LED_Value < LED_LENGTH){

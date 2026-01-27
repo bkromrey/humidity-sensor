@@ -26,19 +26,16 @@
 // 5.Calculate the temperature and humidity value
 
 
-// pins 6 & 7 (GPIO 4 & 5)  are on I2C0
+// pins 6 & 7 (GPIO 4 & 5) are on I2C0
 i2c_inst_t * i2c_channel = i2c0;
 
-// sensor address - this must be 7 bytes long
-static const uint8_t HARDWARE_ADDR = 0x38;
+static const uint8_t HARDWARE_ADDR = 0x38;                  // sensor address 
 
-static const uint8_t READY_STATUS = 0x18;
+static const uint8_t READY_STATUS = 0x18;                   // sensor sends this when ready to take a measurement
 
-//static const uint8_t[] TRIGGER_MEASUREMENT = 0xAC; // has two byte parameter 0x33 and 0x00
-//static const 
-const uint8_t TRIGGER_MEASUREMENT = { 0xAC, 0x33, 0x00 };
-//const uint8_t TRIGGER_MEASUREMENT[] = { 0xAC, 0x33, 0x00 };
+const uint8_t TRIGGER_MEASUREMENT = { 0xAC, 0x33, 0x00 };   // has two byte parameter 0x33 and 0x00
 
+// TODO: clean up docstring
 // returns the number of bytes read. stores read contents into response.
 int take_measurement(){
 
@@ -49,28 +46,79 @@ int take_measurement(){
 
   // send the command to trigger measurement
   int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, &TRIGGER_MEASUREMENT, 3, 0);
-  
-  // wait 80 ms for the sensor to take the measurement
-  sleep_ms(80);
-
-  // read the status word to see if measurement has completed (bit 7 should be 0)
-  int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, raw_data, 1, 0);
-
-  if (DEBUG_SENSOR) { 
-    printf("read %d bytes from sensor\r\n", bytes_read);
-    printf("response is: %x\r\n", raw_data[0]);
+  if (bytes_written < 1){
+    return 1;
   }
 
+  // the MSB is set when the sensor has completed its reading
+  while (raw_data[0] & (1 << 7) == 0){
+  
+    // wait 80 ms for the sensor to take the measurement, per datasheet
+    sleep_ms(80);
 
-  //uint8_t response[8];
-  //int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, response, 1, 0);
+    // read the status word to see if measurement has completed (bit 7 should be 0)
+    int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, raw_data, 1, 0);
+    if (bytes_read < 1){
+      return 1;
+    }
+  }
+  
+  if (DEBUG_SENSOR) { 
+    printf("status word is: %x\r\n", raw_data[0]);
+  }
 
-  //int i2c_write_blocking (i2c_inst_t * i2c, uint8_t addr, const uint8_t * src, size_t len, bool nostop)
-  //int bytes_written = i2c_write_blocking(i2c_bus, HARDWARE_ADDR, &GET_STATUS_WORD, 1, false);
+  // read 6 bytes of data + 1 byte CRC
+  int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &raw_data[1], 7, 0);
+  if (bytes_read < 1){
+    return 1;
+  }
+
+  if (DEBUG_SENSOR){
+    printf("raw data: %x %x %x %x %x %x [CRC: %x]\r\n", raw_data[1], raw_data[2], raw_data[3], raw_data[4], raw_data[5], raw_data[6], raw_data[7]);
+  }
+
+  // TODO: check CRC validity   
+  uint8_t crc_data = raw_data[7];
+
+
+  // make a copy of the byte to be split in half so bitwise operations don't mess with data
+  uint8_t half_byte = raw_data[4];
+  half_byte = half_byte << 4;
+  half_byte = half_byte >> 4;
+
+  // get raw humidity
+  uint32_t raw_humidity = 0;
+  raw_humidity += raw_data[2] << 12;
+  raw_humidity += raw_data[3] << 4;
+  raw_humidity += raw_data[4] >> 4;
+
+  // get raw temperature
+  uint32_t raw_temp = 0;
+  raw_temp += half_byte << 16;  
+  raw_temp += raw_data[5] << 8; 
+  raw_temp += raw_data[6];
+
+  if (DEBUG_SENSOR) { 
+    printf("raw humidity: %" PRIu32 "\r\n", raw_humidity); 
+    printf("raw temp: %" PRIu32 "\r\n", raw_temp); 
+  }
+
+  
+  float denominator = pow(2, 20);
+
+  // calculate humidity
+  float calc_humidity = (raw_humidity / denominator) * 100;
+
+  // calculate temperature
+  float calc_temperature_c = (raw_temp / denominator ) * 200 - 50;
+
+  if (DEBUG_SENSOR) {
+    printf("------------------\r\n");
+    printf("HUMIDITY: %f %%\t TEMP: %f °C\r\n", calc_humidity, calc_temperature_c);
+  }
 
   return bytes_written;
 }
-
 
 
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
@@ -111,11 +159,10 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &response, 1, 0);
 
   if (DEBUG_SENSOR) { 
-    printf("read %d bytes from sensor\r\n", bytes_read);
     printf("response is: %x\r\n", response);
   }
 
-  // ensure we actually read something
+  // error if we cannot read anything
   if (bytes_read < 1){
     return 1;
   }
