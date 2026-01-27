@@ -30,11 +30,17 @@ pico_sdk_init()
 add_executable(humidity-sensor
         main.c
         hardware/led_array.c
+        hardware/buttons.c
+        core1/core1.c
         )
 
 pico_enable_stdio_usb(humidity-sensor 1)
 
-target_link_libraries(humidity-sensor pico_stdlib)
+target_link_libraries(humidity-sensor 
+        pico_stdlib 
+        pico_multicore
+        hardware_adc
+        )
 
 add_compile_options(-Wall
         -Wno-format
