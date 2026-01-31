@@ -1,6 +1,7 @@
 // Standard Library
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // Pico SDK
 #include "pico/stdlib.h"
@@ -12,7 +13,9 @@
 #include "hardware/dht20_sensor.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG false
+#define DEBUG true 
+
+#define SENSOR_DEMO true
 
 // Buttons
 #define BUTTONS_LENGTH 3
@@ -41,6 +44,7 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
+
 
 // Output Flag
 volatile uint Output_Flag = 0;
@@ -91,13 +95,20 @@ int main() {
   if (!setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL)){
     printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   }
-  
+ 
+
+  #if SENSOR_DEMO
+  struct sensor_reading * current_reading = malloc(sizeof(struct sensor_reading));
 
   // demo sensor
   for (int i=0; i < 5; i++){ 
-    take_measurement();
+    take_measurement(current_reading);
+    printf("Humidity: %f\t Temperature: %f °C (%f °F)\r\n", current_reading->humidity, current_reading->temperature_c, current_reading->temperature_f);
     sleep_ms(5000);
   }
+
+  free(current_reading);
+  #endif
 
   while (true) {
     if (Increment && LED_Value < LED_LENGTH){

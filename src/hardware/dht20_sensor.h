@@ -11,3 +11,12 @@
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin);
 
 int take_measurement();
+
+// define struct to contain data from a single sensor reading
+struct sensor_reading {
+  float humidity;
+  float temperature_c;
+  float temperature_f;
+  char* timestamp;
+};
+

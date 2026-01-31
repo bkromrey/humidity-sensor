@@ -1,19 +1,22 @@
 #include "dht20_sensor.h"
 
-#define DEBUG_SENSOR true           // whether to print sensor readings 
-#define DEBUG_SENSOR_VERBOSE false  // whether to print raw data readings etc.
+#define DEBUG_SENSOR false  // whether to print sensor readings 
+#define DEBUG_SENSOR_VERBOSE false// whether to print raw data readings etc.
 
 
 // pins 6 & 7 (GPIO 4 & 5) are on I2C0
 i2c_inst_t * i2c_channel = i2c0;
 
-static const uint8_t HARDWARE_ADDR = 0x38;                  // sensor address 
-static const uint8_t READY_STATUS = 0x18;                   // sensor sends this when ready to take a measurement
-static const uint8_t TRIGGER_MEASUREMENT = { 0xAC, 0x33, 0x00 };   // has two byte parameter 0x33 and 0x00
+static const uint8_t HARDWARE_ADDR = 0x38;                            // sensor address 
+static const uint8_t READY_STATUS = 0x18;                             // sensor sends this when ready to take a measurement
+static const uint8_t TRIGGER_MEASUREMENT = { 0xAC, 0x33, 0x00 };      // has two byte parameter 0x33 and 0x00
+
+
+
 
 // TODO: clean up docstring
-// returns the number of bytes read. stores read contents into response.
-int take_measurement(){
+// returns the number of bytes read. stores read contents into response. 
+int take_measurement(struct sensor_reading * current_data){
 
   uint8_t raw_data[8];
 
@@ -39,21 +42,17 @@ int take_measurement(){
     }
   }
   
-  if (DEBUG_SENSOR_VERBOSE) { 
-    printf("status word is: %x\r\n", raw_data[0]);
-  }
-
   // read 6 bytes of data + 1 byte CRC
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &raw_data[1], 7, 0);
   if (bytes_read < 1){
     return 1;
   }
 
-  if (DEBUG_SENSOR_VERBOSE){
-    printf("raw data: %x %x %x %x %x %x [CRC: %x]\r\n", raw_data[1], raw_data[2], raw_data[3], raw_data[4], raw_data[5], raw_data[6], raw_data[7]);
-  }
+  #if DEBUG_SENSOR_VERBOSE
+  printf("raw data: %x %x %x %x %x %x [CRC: %x]\r\n", raw_data[1], raw_data[2], raw_data[3], raw_data[4], raw_data[5], raw_data[6], raw_data[7]);
+  #endif
 
-  // TODO: check CRC validity   
+  // TODO: check CRC validity - DHT20 sensor uses CRC8/NRSC-5 (x⁸ + x⁵ + x⁴ + 1)
   uint8_t crc_data = raw_data[7];
 
   // 4.After receiving six bytes, the next byte is the CRC check data. The user
@@ -80,20 +79,20 @@ int take_measurement(){
   raw_temp += raw_data[5] << 8; 
   raw_temp += raw_data[6];
 
-  if (DEBUG_SENSOR_VERBOSE) { 
-    printf("raw humidity: %" PRIu32 "\r\n", raw_humidity); 
-    printf("raw temp: %" PRIu32 "\r\n", raw_temp); 
-  }
+  #if DEBUG_SENSOR_VERBOSE 
+  printf("raw humidity: %" PRIu32 "\r\n", raw_humidity); 
+  printf("raw temp: %" PRIu32 "\r\n", raw_temp); 
+  #endif
 
   // formulas for humidity & temperature taken from datasheet 
   float denominator = pow(2, 20);
-  float calc_humidity = (raw_humidity / denominator) * 100;
-  float calc_temperature_c = (raw_temp / denominator ) * 200 - 50;
-  float calc_temperature_f = (calc_temperature_c * 1.8) + 32;
+  current_data->humidity = (raw_humidity / denominator) * 100;
+  current_data->temperature_c = (raw_temp / denominator ) * 200 - 50;
+  current_data->temperature_f = (current_data->temperature_c * 1.8) + 32;
 
-  if (DEBUG_SENSOR) {
-    printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", calc_humidity, calc_temperature_c, calc_temperature_f);
-  }
+  #if DEBUG_SENSOR
+  printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", current_data->humidity, current_data->temperature_c, current_data->temperature_f);
+  #endif
 
   return bytes_written;
 }
@@ -102,10 +101,10 @@ int take_measurement(){
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   bool sensor_ready = false;
   
-  if (DEBUG_SENSOR) {
-    sleep_ms(5000);   // sleep long enough to catch logging
-    printf("initializing humidity sensor...\r\n");
-  }
+  #if DEBUG_SENSOR
+  sleep_ms(5000);   // sleep long enough to catch logging
+  printf("initializing humidity sensor...\r\n");
+  #endif
 
   // most devices clock at either 100 or 400 kHertz. SDK says controller does
   // not support high speed mode (though other sources on the internet indicate
@@ -124,9 +123,9 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   // sleep at minimum 100ms per datasheet
   sleep_ms(100);
 
-  if (DEBUG_SENSOR_VERBOSE) {
-    printf("getting status of register...\r\n");
-  }
+  #if DEBUG_SENSOR_VERBOSE
+  printf("getting status of register...\r\n");
+  #endif
 
   // datasheet is misleading. says to send status word of 0x71, but that really
   // is just a 7-bit 0x38 (sensor's address) plus a read bit of '1' tacked onto
@@ -135,9 +134,9 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   uint8_t response = 0;
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &response, 1, 0);
 
-  if (DEBUG_SENSOR_VERBOSE) { 
-    printf("response is: %x\r\n", response);
-  }
+  #if DEBUG_SENSOR_VERBOSE
+  printf("response is: %x\r\n", response);
+  #endif
 
   // error if we cannot read anything
   if (bytes_read < 1){
@@ -157,13 +156,13 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   // details Please refer to our official website routine for the initialization
   // process; if they are equal, proceed to the next step.
   
-  if (DEBUG_SENSOR) { 
-    if (sensor_ready) {
-      printf("DHT20 sensor initialized\r\n");
-    } else {
-      printf("DHT20 sensor failed to initialize!\r\n");
-    }
+  #if DEBUG_SENSOR 
+  if (sensor_ready) {
+    printf("DHT20 sensor initialized\r\n");
+  } else {
+    printf("DHT20 sensor failed to initialize!\r\n");
   }
+  #endif
 
   return sensor_ready;
 }
