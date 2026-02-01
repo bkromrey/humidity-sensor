@@ -9,9 +9,41 @@ i2c_inst_t * i2c_channel = i2c0;
 
 static const uint8_t HARDWARE_ADDR = 0x38;                            // sensor address 
 static const uint8_t READY_STATUS = 0x18;                             // sensor sends this when ready to take a measurement
-static const uint8_t TRIGGER_MEASUREMENT[] = { 0xAC, 0x33, 0x00 };      // has two byte parameter 0x33 and 0x00
+static const uint8_t TRIGGER_MEASUREMENT[3] = { 0xAC, 0x33, 0x00 };      // has two byte parameter 0x33 and 0x00
 static uint8_t INITIAL_CRC_VAL = 0xFF;
 static const uint8_t CRC_POLYNOMIAL = 0x31;                           //  CRC8 check polynomial is CRC [7:0] = 1+X4+X5+X8
+
+
+// TODO: calibrate sensor if it returns anything other than 0x18
+// From the DHT20 datasheet, to calibrate: "... initialize the 0x1B, 0x1C, 0x1E registers,
+// details Please refer to our official website routine for the initialization process."
+int reset_sensor_register(uint8_t register_address){
+
+  uint8_t register_data[3];
+  uint8_t calibration_data[3] = {register_address, 0x00, 0x00};
+
+
+  // send calibration data to register being calibrated
+  i2c_write_blocking(i2c_channel, HARDWARE_ADDR, calibration_data, 3, 0);
+  sleep_ms(5);
+
+  // read 3 bytes from register. first byte will be ignored/overwritten before data is sent back
+  int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
+  if (bytes_read < 0){
+    return 1;
+  }
+  sleep_ms(10);
+
+  // we need to OR 0x80 and the address of the register, and then send it back with the 2nd & 3rd bytes we just recieved per vendor example
+  register_data[0] = register_address | 0x80;
+  int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
+  if (bytes_written < 0){
+    return 1;
+  }
+
+  return 0;
+}
+
 
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   bool sensor_ready = false;
@@ -27,7 +59,6 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   i2c_init(i2c_channel, 400000);
 
   // define sda & scl pins to function as i2c
-  //NOTE: (to self): Per the SDK, the GPIO_FUNC_I2C is enum defining function of the pin
   gpio_set_function(sensor_sda_pin, GPIO_FUNC_I2C);
   gpio_set_function(sensor_scl_pin, GPIO_FUNC_I2C);
 
@@ -58,19 +89,16 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
     return 1;
   }
 
-  // sensor's replay should equal 0x18, otherwise need to initialize registers
+  // sensor's replay should equal 0x18, otherwise need to initialize registers to calibrate
   if (response |= READY_STATUS){
     sensor_ready = true;
-  } 
+  } else{
+    reset_sensor_register(0x1B);
+    reset_sensor_register(0x1C);
+    reset_sensor_register(0x1E);
+    sensor_ready = true;
+  }
  
-  // TODO: calibrate sensor if it returns anything other than 0x18
-  // FROM THE DHT20 DATA SHEET
-  // 1.After power-on, wait no less than 100ms. Before reading the temperature and 
-  // humidity value, get a byte of status word by sending 0x71. If the status word
-  // and 0x18 are not equal to 0x18, initialize the 0x1B, 0x1C, 0x1E registers,
-  // details Please refer to our official website routine for the initialization
-  // process; if they are equal, proceed to the next step.
-  
   #if DEBUG_SENSOR 
   if (sensor_ready) {
     printf("DHT20 sensor initialized\r\n");
