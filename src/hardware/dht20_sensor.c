@@ -23,8 +23,8 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
 
   // most devices clock at either 100 or 400 kHertz. SDK says controller does
   // not support high speed mode (though other sources on the internet indicate
-  // that it does), so initialize at standard rate to be on the safe side
-  i2c_init(i2c_channel, 100000);
+  // that it does) - setting to 400 kHz, but if we have issues, bump back down to 100 kHz 
+  i2c_init(i2c_channel, 400000);
 
   // define sda & scl pins to function as i2c
   //NOTE: (to self): Per the SDK, the GPIO_FUNC_I2C is enum defining function of the pin
