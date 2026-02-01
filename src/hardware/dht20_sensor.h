@@ -8,15 +8,17 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
-int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin);
-
-int take_measurement();
 
 // define struct to contain data from a single sensor reading
-struct sensor_reading {
+struct dht20_reading {
   float humidity;
   float temperature_c;
   float temperature_f;
-  char* timestamp;
 };
+
+int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin);
+
+uint8_t calculate_crc8(uint8_t * data, int num_bytes);
+
+int take_measurement(struct dht20_reading * current_measurement);
 

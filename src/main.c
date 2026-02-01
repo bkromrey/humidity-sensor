@@ -98,16 +98,16 @@ int main() {
  
 
   #if SENSOR_DEMO
-  struct sensor_reading * current_reading = malloc(sizeof(struct sensor_reading));
+  struct dht20_reading * current_measurement = malloc(sizeof(struct dht20_reading));
 
   // demo sensor
-  for (int i=0; i < 5; i++){ 
-    take_measurement(current_reading);
-    printf("Humidity: %f\t Temperature: %f °C (%f °F)\r\n", current_reading->humidity, current_reading->temperature_c, current_reading->temperature_f);
-    sleep_ms(5000);
+  for (int i=0; i < 5000; i++){ 
+    take_measurement(current_measurement);
+    printf("Humidity: %f\t Temperature: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
+    sleep_ms(10000);
   }
 
-  free(current_reading);
+  free(current_measurement);
   #endif
 
   while (true) {
