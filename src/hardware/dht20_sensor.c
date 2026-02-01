@@ -24,7 +24,11 @@ int reset_sensor_register(uint8_t register_address){
 
 
   // send calibration data to register being calibrated
-  i2c_write_blocking(i2c_channel, HARDWARE_ADDR, calibration_data, 3, 0);
+  int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, calibration_data, 3, 0);
+  if (bytes_written < 0){
+    return 1;
+  }
+
   sleep_ms(5);
 
   // read 3 bytes from register. first byte will be ignored/overwritten before data is sent back
@@ -32,11 +36,12 @@ int reset_sensor_register(uint8_t register_address){
   if (bytes_read < 0){
     return 1;
   }
+
   sleep_ms(10);
 
   // we need to OR 0x80 and the address of the register, and then send it back with the 2nd & 3rd bytes we just recieved per vendor example
   register_data[0] = register_address | 0x80;
-  int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
+  bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
   if (bytes_written < 0){
     return 1;
   }
@@ -93,6 +98,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   if (response |= READY_STATUS){
     sensor_ready = true;
   } else{
+    // per datasheet, the following 3 registers need to be initialized/reset in order to calibrate
     reset_sensor_register(0x1B);
     reset_sensor_register(0x1C);
     reset_sensor_register(0x1E);
@@ -110,9 +116,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   return sensor_ready;
 }
 
-
-
-// TODO: check CRC validity - DHT20 sensor uses CRC8/NRSC-5 (x⁸ + x⁵ + x⁴ + 1), which is 0x31
+// check CRC validity - DHT20 sensor uses CRC8/NRSC-5 (x⁸ + x⁵ + x⁴ + 1), which is 0x31
 uint8_t calculate_crc8(uint8_t * data, int num_bytes){
 
   uint8_t crc = INITIAL_CRC_VAL;
