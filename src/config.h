@@ -25,7 +25,7 @@ static const uint Buttons[BUTTONS_LENGTH] = {
 #define LED_PIN_4 14
 #define LED_PIN_5 15
 
-static const uint Led_Pins[LED_LENGTH] = {
+static const uint32_t Led_Pins[LED_LENGTH] = {
     LED_PIN_0,
     LED_PIN_1,
     LED_PIN_2,

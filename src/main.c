@@ -1,58 +1,188 @@
 // Standard Library
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 
 // Pico SDK
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
+#include "pico/time.h"
+#include "pico/multicore.h"
 #include "hardware/gpio.h"
+#include "hardware/sync.h"
 #include "hardware/i2c.h"
 
-// User Modules
-#include "hardware/led_array.h"
-#include "hardware/lcd.h"
-#include "ui/lcd_ui.h"
-
-// Configuration file; all hardware constants and settings here
+// config
 #include "config.h"
 
-// mock UI for testing
-#include "../mock/mock_ui.h"
+// lcd ui
+#include "ui/lcd_ui.h"
+#include "hardware/lcd.h"
+// User Modules
+#include "hardware/led_array.h"
+#include "hardware/buttons.h"
+#include "data_flow/data_flow.h" // data types shared between main and core1
+#include "core1/core1.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG true
+#define DEBUG 0
 
-// Output Flag
-volatile uint Output_Flag = 0;
-const uint Output_Screens = 2;
+// System Interrupt Speed
+#define SYS_TIMER 20 // ms
 
-// Test
-uint LED_Value = 0;
-volatile bool Increment = false;
-volatile bool Decrement = false;
-volatile bool Set_Zero = false;
+// Buttons
+#define BUTTON_DEBOUNCE 1 // 20 ms
+#define NUM_BUTTONS 3
+#define BUTTON_1 16
+#define BUTTON_2 17
+#define BUTTON_3 18
+
+// Button Handler Prtotypes
+void Button_1_Handler(void);
+void Button_2_Handler(void);
+void Button_3_Handler(void);
+
+Button Button_Array[NUM_BUTTONS] = {
+    {BUTTON_1, 0, BUTTON_DEBOUNCE, false, Button_1_Handler},
+    {BUTTON_2, 0, BUTTON_DEBOUNCE, false, Button_2_Handler},
+    {BUTTON_3, 0, BUTTON_DEBOUNCE, false, Button_3_Handler},
+};
+
+// LED Array
+// #define LED_LENGTH 6
+// #define LED_PIN_0 10
+// #define LED_PIN_1 11
+// #define LED_PIN_2 12
+// #define LED_PIN_3 13
+// #define LED_PIN_4 14
+// #define LED_PIN_5 15
+// uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
+
+// ADC Conversion
+#define ADC_MAX 3200
+#define ADC_MIN 100
+
+// Humidity Sensor I2C
+#define SENSOR_I2C_SDA 4
+#define SENSOR_I2C_SCL 5
+
+static lcd_env_data_t ui = {0};
+// static char lcd_line1[17];
+// static char lcd_line2[17];
+
+// refresh rate lcd limiter
+static absolute_time_t lcd_next_update;
+static absolute_time_t uart_next_update;
+
+
+
+
+// Test Globals
+uint32_t LED_Value = 0;
+
+void Button_1_Handler(void)
+{
+  if (LED_Value > 0)
+    LED_Value--;
+}
+
+void Button_2_Handler(void)
+{
+  if (LED_Value < LED_LENGTH)
+    LED_Value++;
+}
+
+void Button_3_Handler(void)
+{
+  LED_Value = 0;
+}
+
+bool system_timer_callback(struct repeating_timer *t)
+{
+  // protect critical section
+  uint32_t status = save_and_disable_interrupts();
+
+  // decrement buttons disabled count
+  for (Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS; btn++)
+  {
+    if (btn->disabled_count)
+      btn->disabled_count--;
+  }
+
+  restore_interrupts(status);
+  return true;
+}
 
 void GPIO_Handler(uint gpio, uint32_t event_mask)
 {
-  switch (gpio)
+  for (Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS; btn++)
   {
-  case BUTTON_1:
-    Decrement = true;
-    break;
-  case BUTTON_2:
-    Increment = true;
-    break;
-  case BUTTON_3:
-    Set_Zero = true;
-    break;
+    if (btn->button_pin == gpio && btn->disabled_count == 0)
+    {                                         // if this button is the pin that's been pressed and it's not disabled
+      btn->flag = true;                       // set flag to true, pressed
+      btn->disabled_count = btn->reset_value; // resetd disabled counter
+    }
   }
 }
 
-void Button_Init(uint button_pin)
+void Button_Logic(void)
 {
-  gpio_init(button_pin);
-  gpio_set_dir(button_pin, GPIO_IN);
-  gpio_pull_up(button_pin);
+  for (Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS; btn++)
+  {
+    // handle race condition
+    uint32_t status = save_and_disable_interrupts();
+
+    // Save State
+    bool flag_local = btn->flag;
+    // Consume Flag
+    btn->flag = false; // set flag to not pressed, system_timer_callback handles the delay decrements, GPIO_Handler resets this value
+    restore_interrupts(status);
+
+    // button logic
+    if (flag_local)
+      btn->button_handler();
+  }
+}
+
+void Process_Data(void){
+  while (Data_Ring_Buffer.head != Data_Ring_Buffer.tail) {
+
+    Payload_Data data = Data_Ring_Buffer.buffer[Data_Ring_Buffer.tail];
+    __dmb();
+    Data_Ring_Buffer.tail =
+      (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
+
+    // --- UART update @ 5Hz (оставляем!) ---
+    if (absolute_time_diff_us(get_absolute_time(), uart_next_update) <= 0) {
+      uart_next_update = delayed_by_ms(get_absolute_time(), 200);
+
+      printf("IDX:%u ADC:%u T:%lu H:%lu\r\n",
+        (unsigned)Data_Ring_Buffer.tail,
+        (unsigned)data.ADC_Data,
+        (unsigned long)data.Temperature_Data,
+        (unsigned long)data.Humidity_Data
+      );
+    }
+
+    // --- LCD update @ 5Hz ---
+    if (absolute_time_diff_us(get_absolute_time(), lcd_next_update) <= 0) {
+      lcd_next_update = delayed_by_ms(get_absolute_time(), 200);
+
+      ui.mode = LCD_MODE_NORMAL;
+      ui.view_mode = LCD_VIEW_ENV;
+
+      ui.has_temp = true;
+      ui.temp_unit = TEMP_C;
+
+      // scale: если у тебя данные в сотых (например 2350 => 23.50°C)
+      ui.temp_value = (float)data.Temperature_Data / 100.0f;
+
+      ui.has_humidity = true;
+      ui.humidity_percent = (float)data.Humidity_Data / 100.0f;
+
+      lcd_env_render(&ui);
+    }
+  }
 }
 
 int main()
@@ -60,58 +190,47 @@ int main()
   // Needed for picotool
   stdio_init_all();
 
-  // Buttons
-  for (uint i = 0; i < BUTTONS_LENGTH; i++)
-  {
-    Button_Init(Buttons[i]);
-  }
-  gpio_set_irq_enabled_with_callback(BUTTON_1, GPIO_IRQ_EDGE_FALL, true, &GPIO_Handler);
-  gpio_set_irq_enabled(BUTTON_2, GPIO_IRQ_EDGE_FALL, true);
-  gpio_set_irq_enabled(BUTTON_3, GPIO_IRQ_EDGE_FALL, true);
-
-  // LED Array
-  LED_Array_Init(Led_Pins, LED_LENGTH);
-
-  // LCD I2C init (I2C0)
+  // --- i2c rpotocol init init (per README) ---
   i2c_init(LCD_I2C_PORT, 100 * 1000);
+
+  // set up lcd i2c pins
   gpio_set_function(LCD_I2C_SDA, GPIO_FUNC_I2C);
   gpio_set_function(LCD_I2C_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(LCD_I2C_SDA);
   gpio_pull_up(LCD_I2C_SCL);
 
-  // Initialize LCD
+  // lcd init
   lcd_init();
-  // lcd_set_cursor(0, 0);
-  // lcd_string("Hello");
-  // lcd_set_cursor(1, 0);
-  // lcd_string("World");
 
-  // Run mock UI demonstration
-  mock_ui_run_lcd();
+  // System Timer
+  struct repeating_timer timer;
+  add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
+
+  // Buttons
+  Button_Init(Button_Array, NUM_BUTTONS);
+  GPIO_Interrupt_Init(GPIO_Handler);
+
+  // LED Array
+  LED_Array_Init(Led_Pins, LED_LENGTH);
+
+  // Launch Core 1
+  multicore_launch_core1(Core_1_Entry);
 
   while (true)
   {
-    if (Increment && LED_Value < LED_LENGTH)
-    {
-      LED_Value++;
-      Increment = false;
-    }
-    if (Decrement && LED_Value > 0)
-    {
-      LED_Value--;
-      Decrement = false;
-    }
-    if (Set_Zero)
-    {
-      LED_Value = 0;
-      Set_Zero = false;
-    }
+    Button_Logic();
 
-    // printf for UART debugging only if debug mode enabled
-    if (DEBUG)
+// printf for UART debugging only if debug mode enabled
+#if DEBUG
+    static uint32_t led_value_old = 0;
+    if (LED_Value != led_value_old)
     {
       printf("LED_Value is: %d\r\n", LED_Value);
+      led_value_old = LED_Value;
     }
+#endif
+
+    Process_Data();
 
     Display_LED_Array(LED_Value);
   }
