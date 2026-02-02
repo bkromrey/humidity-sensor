@@ -1,5 +1,7 @@
 #pragma once
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdint.h>
 
 /**
  * LCD display operation modes.
@@ -19,7 +21,8 @@ typedef enum
 typedef enum
 {
     LCD_VIEW_ENV = 0,  // Display environmental data (temperature, humidity)
-    LCD_VIEW_TEXT      // Display text messages
+    LCD_VIEW_TEXT,     // Display text messages
+    LCD_VIEW_PHOTO     // Display photoresistor / ADC data
 } lcd_view_t;
 
 /**
@@ -46,6 +49,11 @@ typedef struct
 
     bool has_humidity;       // Flag indicating humidity data availability
     float humidity_percent;  // Humidity percentage
+
+    bool has_photo;          // Flag indicating photo/ADC data availability
+    uint16_t photo_raw;       // Raw ADC value (0..4095 or project scale)
+    float photo_percent;      // Normalized light level in percent (0..100)
+
 
     const char *line1;       // Text for the first display line
     const char *line2;       // Text for the second display line

@@ -3,7 +3,19 @@
 
 #include <stdint.h>
 #include "hardware/i2c.h"
+#include <stdbool.h>
+// Debug Mode - enable or disable bc printf to UART is slow
+#define DEBUG 0
+#define PHOTO_NOISE_THR 15
+// System Interrupt Speed
+#define SYS_TIMER 20 // ms
 
+// Buttons
+#define BUTTON_DEBOUNCE 1 // 20 ms
+#define NUM_BUTTONS 3
+#define BUTTON_1 16
+#define BUTTON_2 17
+#define BUTTON_3 18
 // ===== BUTTONS =====
 #define BUTTONS_LENGTH 3
 #define BUTTON_1 16
