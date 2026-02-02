@@ -37,23 +37,8 @@ Button Button_Array[NUM_BUTTONS] = {
     {BUTTON_3, 0, BUTTON_DEBOUNCE, false, Button_3_Handler},
 };
 
-// LED Array
-// #define LED_LENGTH 6
-// #define LED_PIN_0 10
-// #define LED_PIN_1 11
-// #define LED_PIN_2 12
-// #define LED_PIN_3 13
-// #define LED_PIN_4 14
-// #define LED_PIN_5 15
-// uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
 
-// ADC Conversion
-#define ADC_MAX 3200
-#define ADC_MIN 100
 
-// Humidity Sensor I2C
-#define SENSOR_I2C_SDA 4
-#define SENSOR_I2C_SCL 5
 
 static lcd_env_data_t ui = {0};
 // static char lcd_line1[17];
