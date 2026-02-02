@@ -70,12 +70,15 @@ static lcd_env_data_t ui = {0};
 // static char lcd_line1[17];
 // static char lcd_line2[17];
 
-// refresh rate lcd limiter
+// refresh rate limiters
+// LCD should only repaint when *values changed*, and not more often than 1Hz.
 static absolute_time_t lcd_next_update;
 static absolute_time_t uart_next_update;
 
-
-
+// last rendered raw sensor values (avoid float compare noise)
+static bool lcd_has_last = false;
+static uint32_t lcd_last_temp_raw = 0;
+static uint32_t lcd_last_hum_raw = 0;
 
 // Test Globals
 uint32_t LED_Value = 0;
@@ -144,45 +147,67 @@ void Button_Logic(void)
   }
 }
 
-void Process_Data(void){
-  while (Data_Ring_Buffer.head != Data_Ring_Buffer.tail) {
+void Process_Data(void)
+{
+  // Drain the buffer; keep only the newest sample for LCD.
+  bool have_sample = false;
+  Payload_Data newest = {0};
 
+  while (Data_Ring_Buffer.head != Data_Ring_Buffer.tail)
+  {
     Payload_Data data = Data_Ring_Buffer.buffer[Data_Ring_Buffer.tail];
     __dmb();
-    Data_Ring_Buffer.tail =
-      (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
+    Data_Ring_Buffer.tail = (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
+
+    newest = data;
+    have_sample = true;
 
     // --- UART update @ 5Hz (оставляем!) ---
-    if (absolute_time_diff_us(get_absolute_time(), uart_next_update) <= 0) {
+    if (absolute_time_diff_us(get_absolute_time(), uart_next_update) <= 0)
+    {
       uart_next_update = delayed_by_ms(get_absolute_time(), 200);
 
       printf("IDX:%u ADC:%u T:%lu H:%lu\r\n",
-        (unsigned)Data_Ring_Buffer.tail,
-        (unsigned)data.ADC_Data,
-        (unsigned long)data.Temperature_Data,
-        (unsigned long)data.Humidity_Data
-      );
-    }
-
-    // --- LCD update @ 5Hz ---
-    if (absolute_time_diff_us(get_absolute_time(), lcd_next_update) <= 0) {
-      lcd_next_update = delayed_by_ms(get_absolute_time(), 200);
-
-      ui.mode = LCD_MODE_NORMAL;
-      ui.view_mode = LCD_VIEW_ENV;
-
-      ui.has_temp = true;
-      ui.temp_unit = TEMP_C;
-
-      // scale: если у тебя данные в сотых (например 2350 => 23.50°C)
-      ui.temp_value = (float)data.Temperature_Data / 100.0f;
-
-      ui.has_humidity = true;
-      ui.humidity_percent = (float)data.Humidity_Data / 100.0f;
-
-      lcd_env_render(&ui);
+             (unsigned)Data_Ring_Buffer.tail,
+             (unsigned)data.ADC_Data,
+             (unsigned long)data.Temperature_Data,
+             (unsigned long)data.Humidity_Data);
     }
   }
+
+  if (!have_sample)
+    return;
+
+  // --- LCD update ---
+  // Rules:
+  // 1) If values didn't change -> do NOT repaint.
+  // 2) If values changed -> repaint, but no more often than 1Hz.
+  const uint32_t temp_raw = newest.Temperature_Data;
+  const uint32_t hum_raw = newest.Humidity_Data;
+
+  const bool changed = (!lcd_has_last) || (temp_raw != lcd_last_temp_raw) || (hum_raw != lcd_last_hum_raw);
+  if (!changed)
+    return;
+
+  if (absolute_time_diff_us(get_absolute_time(), lcd_next_update) > 0)
+    return; // too early for next allowed repaint
+
+  lcd_next_update = delayed_by_ms(get_absolute_time(), 1000);
+  lcd_has_last = true;
+  lcd_last_temp_raw = temp_raw;
+  lcd_last_hum_raw = hum_raw;
+
+  ui.mode = LCD_MODE_NORMAL;
+  ui.view_mode = LCD_VIEW_ENV;
+
+  ui.has_temp = true;
+  ui.temp_unit = TEMP_C;
+  ui.temp_value = (float)temp_raw / 100.0f;
+
+  ui.has_humidity = true;
+  ui.humidity_percent = (float)hum_raw / 100.0f;
+
+  lcd_env_render(&ui);
 }
 
 int main()
@@ -201,6 +226,11 @@ int main()
 
   // lcd init
   lcd_init();
+
+  // Init rate limiters (so we don't spam LCD/UART right after boot)
+  absolute_time_t now = get_absolute_time();
+  uart_next_update = delayed_by_ms(now, 200);
+  lcd_next_update = delayed_by_ms(now, 1000);
 
   // System Timer
   struct repeating_timer timer;
