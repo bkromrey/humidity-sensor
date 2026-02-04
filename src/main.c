@@ -95,6 +95,7 @@ bool system_timer_callback(struct repeating_timer *t){
   return true;
 }
 
+
 void GPIO_Handler(uint gpio, uint32_t event_mask){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     if(btn->button_pin == gpio && btn->disabled_count == 0){  // if this button is the pin that's been pressed and it's not disabled
@@ -121,17 +122,13 @@ void Button_Logic(void){
   }
 }
 
-void Process_Data(void){
-  while(Data_Ring_Buffer.head != Data_Ring_Buffer.tail){
-    Payload_Data data_copy = Data_Ring_Buffer.buffer[Data_Ring_Buffer.tail]; // index the buffer with the tail value
-    __dmb(); // ensure payload reads before tail changes
-    // Increment tail
-    Data_Ring_Buffer.tail = (Data_Ring_Buffer.tail + 1) % DATA_BUFFER_SIZE;
+Payload_Data *Get_Core1_Data(void){
+  return (Payload_Data *) 
+  multicore_fifo_pop_blocking();
+}
 
-    // Do something with the data
-    printf("Index: %d\r\n",Data_Ring_Buffer.tail);
-    printf("ADC Data: %d\r\n",data_copy.ADC_Data);
-  }
+void Ack_Successful(void){
+  multicore_fifo_push_blocking(true);
 }
 
 int main() {
@@ -152,6 +149,9 @@ int main() {
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
 
+  Payload_Data *data;
+  bool data_ready;
+
   while (true) {
     Button_Logic();
 
@@ -163,8 +163,14 @@ int main() {
         led_value_old = LED_Value;
       }
     #endif
-    
-    Process_Data();
+
+    data_ready = multicore_fifo_rvalid();
+    if (data_ready){
+      data = Get_Core1_Data();
+      // Acknowledge packet is received
+      Ack_Successful();
+      printf("ADC Value: %d\r\n", data->ADC_Data); // this is here to prove a point
+    }
 
     Display_LED_Array(LED_Value);
   }

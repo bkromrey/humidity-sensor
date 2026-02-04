@@ -2,6 +2,7 @@
 #define __DATA_FLOW__
 
 #include <stdint.h>
+#include "pico/multicore.h"
 
 typedef struct {
     volatile uint64_t time_stamp;
