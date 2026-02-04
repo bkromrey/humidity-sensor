@@ -150,6 +150,7 @@ int main() {
   multicore_launch_core1(Core_1_Entry);
 
   Payload_Data *data;
+  Payload_Data data_copy;
   bool data_ready;
 
   while (true) {
@@ -168,8 +169,9 @@ int main() {
     if (data_ready){
       data = Get_Core1_Data();
       // Acknowledge packet is received
+      data_copy = *data;
       Ack_Successful();
-      printf("ADC Value: %d\r\n", data->ADC_Data); // this is here to prove a point
+      printf("ADC Value: %d\r\n", data_copy.ADC_Data); // this is here to prove a point
     }
 
     Display_LED_Array(LED_Value);
