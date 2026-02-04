@@ -35,7 +35,7 @@ void Produce_Data(void){
 
     // If Data is Valid
     multicore_fifo_push_blocking((uint32_t) data);
-    bool response = multicore_fifo_pop_blocking();
+    bool response = multicore_fifo_pop_blocking(); // block until the packet is read
 }
 
 bool Core_1_Timer_Callback(struct repeating_timer *t){
