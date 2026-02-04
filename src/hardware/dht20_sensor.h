@@ -1,4 +1,4 @@
-// Standard libraries
+// Standard Libraries
 #include <stdint.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -8,7 +8,6 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
-
 // define struct to contain data from a single sensor reading
 struct dht20_reading {
   float humidity;
@@ -16,10 +15,11 @@ struct dht20_reading {
   float temperature_f;
 };
 
-int reset_sensor_register(uint8_t register_address);
+
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin);
 
-uint8_t calculate_crc8(uint8_t * data, int num_bytes);
+int reset_sensor_register(uint8_t register_address);
 
 int take_measurement(struct dht20_reading * current_measurement);
 
+uint8_t calculate_crc8(uint8_t * data, int num_bytes);

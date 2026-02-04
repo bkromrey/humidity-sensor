@@ -1,22 +1,30 @@
 #include "dht20_sensor.h"
 
-#define DEBUG_SENSOR false  // whether to print sensor readings 
-#define DEBUG_SENSOR_VERBOSE false// whether to print raw data readings etc.
+// Debug Options
+#define DEBUG_SENSOR false          // whether to print sensor readings 
+#define DEBUG_SENSOR_VERBOSE false  // whether to print raw data readings etc.
 
 
 // pins 6 & 7 (GPIO 4 & 5) are on I2C0
 i2c_inst_t * i2c_channel = i2c0;
 
+// Sensor Address
 static const uint8_t HARDWARE_ADDR = 0x38;                            // sensor address 
 static const uint8_t READY_STATUS = 0x18;                             // sensor sends this when ready to take a measurement
-static const uint8_t TRIGGER_MEASUREMENT[3] = { 0xAC, 0x33, 0x00 };      // has two byte parameter 0x33 and 0x00
+static const uint8_t TRIGGER_MEASUREMENT[3] = { 0xAC, 0x33, 0x00 };   // has two byte parameter 0x33 and 0x00
+
+// CRC constants - CRC8 check polynomial is CRC [7:0] = 1+X4+X5+X8, which is 0x31;
 static uint8_t INITIAL_CRC_VAL = 0xFF;
-static const uint8_t CRC_POLYNOMIAL = 0x31;                           //  CRC8 check polynomial is CRC [7:0] = 1+X4+X5+X8
+static const uint8_t CRC_POLYNOMIAL = 0x31;
 
-
-// TODO: calibrate sensor if it returns anything other than 0x18
-// From the DHT20 datasheet, to calibrate: "... initialize the 0x1B, 0x1C, 0x1E registers,
-// details Please refer to our official website routine for the initialization process."
+/**
+  * If the sensor returns anything other than 0x18 when reading the status register, 
+  * this function will perform the calibration/reset routine on the provided register. 
+  *
+  * @param register_address   The specific register to be calibrated/reset.
+  *
+  * Returns 0 if successful, or 1 if there were any errors.
+  */
 int reset_sensor_register(uint8_t register_address){
 
   uint8_t register_data[3];
@@ -49,7 +57,17 @@ int reset_sensor_register(uint8_t register_address){
   return 0;
 }
 
-
+/**
+  * Performs the initial I2C setup of the DHT20 sensor and reads the ready status
+  * of the DHT20 sensor. If the DHT20 sensor does not return 0x18 to indicate that it
+  * is ready, this function will call the reset_sensor_register() function in order to
+  * re-calibrate it.
+  *
+  * @param sensor_sda_pin   The GPIO pin number of the SDA pin used by this sensor
+  * @param sensor_scl_pin   The GPIO pin number of the SCL pin used by this sensor
+  *
+  * Returns 0 if successful, or 1 if there were any errors.
+  */
 int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   bool sensor_ready = false;
   
@@ -78,10 +96,9 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   printf("getting status of register...\r\n");
   #endif
 
-  // datasheet is misleading. says to send status word of 0x71, but that really
+  // datasheet says to send status word of 0x71, but that really
   // is just a 7-bit 0x38 (sensor's address) plus a read bit of '1' tacked onto
-  // the end - meaning we just need to do a read on the sensor.
-
+  // the end - meaning we just need to do a read on the sensor
   uint8_t response = 0;
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &response, 1, 0);
 
@@ -98,7 +115,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   if (response |= READY_STATUS){
     sensor_ready = true;
   } else{
-    // per datasheet, the following 3 registers need to be initialized/reset in order to calibrate
+    // per datasheet, to calibrate, we must initialize the 0x1B, 0x1C, and 0x1E registers.
     reset_sensor_register(0x1B);
     reset_sensor_register(0x1C);
     reset_sensor_register(0x1E);
@@ -116,7 +133,15 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   return sensor_ready;
 }
 
-// check CRC validity - DHT20 sensor uses CRC8/NRSC-5 (x⁸ + x⁵ + x⁴ + 1), which is 0x31
+/** Performs the CRC8/NRSC-5 check on the data returned by the sensor when taking
+  * a temerature/humidity measurement. The DHT20 sensor uses CRC8/NRSC-5 with a 
+  * polynomial of (x⁸ + x⁵ + x⁴ + 1), which is 0x31.
+  *
+  * @params data          The data to perform the CRC on.
+  * @params num_bytes     How many bytes of data (typically 6).
+  *
+  * Returns the calculated CRC.
+  */
 uint8_t calculate_crc8(uint8_t * data, int num_bytes){
 
   uint8_t crc = INITIAL_CRC_VAL;
@@ -149,8 +174,16 @@ uint8_t calculate_crc8(uint8_t * data, int num_bytes){
   return crc;
 }
 
-// TODO: clean up docstring
-// returns the number of bytes read. stores read contents into response. 
+
+/**
+  * Sends a message to the DHT20 sensor instructing it to take a measurement. The
+  * DHT20 sensor takes a humidity & temperature measurement which is read by this
+  * function, validated against its CRC, and then converted into human readable data. 
+  *
+  * @param  current_measurement  The struct that is passed in to store the readings
+  *
+  * Returns 0 if successful, or 1 if there were any errors.
+  */
 int take_measurement(struct dht20_reading * current_measurement){
 
   uint8_t raw_data[8];

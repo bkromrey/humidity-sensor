@@ -100,7 +100,7 @@ int main() {
   #if SENSOR_DEMO
   struct dht20_reading * current_measurement = malloc(sizeof(struct dht20_reading));
 
-  // demo sensor
+  // demo sensor - all this is probably going to get reworked when this gets merged into the updated main branch
   for (int i=0; i < 5000; i++){ 
     take_measurement(current_measurement);
     printf("Humidity: %f\t Temperature: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
@@ -125,9 +125,9 @@ int main() {
     }
   
     // printf for UART debugging only if debug mode enabled
-    if (DEBUG) {
+    #if DEBUG
       printf("LED_Value is: %d\r\n", LED_Value);
-    }
+    #endif
 
     Display_LED_Array(LED_Value);
   }
