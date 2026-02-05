@@ -30,11 +30,12 @@
 #define BUTTON_2 17
 #define BUTTON_3 18
 
-// Button Handler Prtotypes
+// Button Handler Prototypes
 void Button_1_Handler(void);
 void Button_2_Handler(void);
 void Button_3_Handler(void);
 
+// Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
   {BUTTON_1, 0, BUTTON_DEBOUNCE, false, Button_1_Handler},
   {BUTTON_2, 0, BUTTON_DEBOUNCE, false, Button_2_Handler},
@@ -66,21 +67,37 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 // Test Globals
 uint32_t LED_Value = 0;
 
+/**
+ * Button 1 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
+ * Decrements global LED value for the LED array
+ */
 void Button_1_Handler(void){
   if(LED_Value > 0)
     LED_Value--;
 }
 
+/**
+ * Button 2 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
+ * Increments global LED value for the LED array
+ */
 void Button_2_Handler(void){
   if(LED_Value < LED_LENGTH)
     LED_Value++;  
 }
 
+/**
+ * Button 3 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
+ * Sets global LED value for the LED array to zero
+ */
 void Button_3_Handler(void){
   LED_Value = 0;  
 }
 
-
+/**
+ * System timer callback for button debouncing
+ * Loops through the global button array and will decrement the button's disabled counter if it is greater than zero
+ * debounces button input
+ */
 bool system_timer_callback(struct repeating_timer *t){
   // protect critical section
   uint32_t status = save_and_disable_interrupts();
@@ -95,7 +112,10 @@ bool system_timer_callback(struct repeating_timer *t){
   return true;
 }
 
-
+/**
+ * GPIO Handler for every falling edge button press
+ * Will loop through button array and set its counter if the button is enabled
+ */
 void GPIO_Handler(uint gpio, uint32_t event_mask){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     if(btn->button_pin == gpio && btn->disabled_count == 0){  // if this button is the pin that's been pressed and it's not disabled
@@ -105,6 +125,10 @@ void GPIO_Handler(uint gpio, uint32_t event_mask){
   }
 }
 
+/**
+ * Button logic function
+ * Runs each buttons handler on button press
+ */
 void Button_Logic(void){
   for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
     // handle race condition
@@ -122,11 +146,17 @@ void Button_Logic(void){
   }
 }
 
+/**
+ * Retrieves data pushed onto the multicore FIFO from Core1 samples
+ * returns a typecast Payload_Data * since the FIFO only carries uint32_t
+ */
 Payload_Data *Get_Core1_Data(void){
-  return (Payload_Data *) 
-  multicore_fifo_pop_blocking();
+  return (Payload_Data *) multicore_fifo_pop_blocking();
 }
 
+/**
+ * Sends packet acknowledgement to Core1
+ */
 void Ack_Successful(void){
   multicore_fifo_push_blocking(true);
 }

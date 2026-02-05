@@ -2,7 +2,7 @@
 
 #define CORE1_TIMER 1000
 
-// ADC Pin
+// ADC Pin, this needs to be put into its own module at some point
 #define PHOTORESISTOR_ADC 26
 
 // File Scope Datatypes
@@ -20,12 +20,17 @@ typedef struct {
 void Produce_Data(void);
 
 // Globals
-Payload_Data Sensor_Data;
+Payload_Data Sensor_Data; // for exchanging data to Core0
 
+// Core_1 System Flag Array
 System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
  {0, SYSTEM_RELOAD, Produce_Data}, // Sample Data Flag
 };
 
+/**
+ * Samples data, packs it into the global payload struct
+ * Sends data to core0, blocks until data acknowledgement is received
+ */
 void Produce_Data(void){
     // Write to Global
     Payload_Data *data= &Sensor_Data;
@@ -35,9 +40,12 @@ void Produce_Data(void){
 
     // If Data is Valid
     multicore_fifo_push_blocking((uint32_t) data);
-    bool response = multicore_fifo_pop_blocking(); // block until the packet is read
+    bool response = multicore_fifo_pop_blocking(); // block until the packet is read, not used for anything yet
 }
 
+/**
+ * Iterates through Core_1_Flag structs on timer execution; decrements value until 0
+ */
 bool Core_1_Timer_Callback(struct repeating_timer *t){
     // protect critical section
     uint32_t status = save_and_disable_interrupts();
@@ -52,6 +60,10 @@ bool Core_1_Timer_Callback(struct repeating_timer *t){
     return true;
 }
 
+/**
+ * Iterates through Core_1_Flags and runs processes if valid
+ * If System flag is 0, function pointer in System_Flag Array is executed
+ */
 void System_Flag_Logic(void){  
     for(System_Flag *flg = Core_1_Flags; flg < Core_1_Flags + NUM_SYSTEM_FLAGS; flg++){
         // protected section
@@ -70,12 +82,18 @@ void System_Flag_Logic(void){
     }
 }
 
+/**
+ * Initializes ADC pin for ADC sampling
+ */
 void ADC_Init(){
     adc_init();
     adc_gpio_init(PHOTORESISTOR_ADC);
     adc_select_input(PHOTORESISTOR_ADC - 26); // Pins 26-29 are ADC pins on the pico
 }
 
+/**
+ * Core1 process called from Core0
+ */
 void Core_1_Entry(void){
     // ADC for the photoresistor
     ADC_Init();
