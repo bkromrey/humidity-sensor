@@ -38,9 +38,13 @@ uint Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN
 #define LCD_I2C_SDA 0
 #define LCD_I2C_SCL 2
 
-// Humidity Sensor I2C - identify based on GPIO pin #, not actual pin #
+// Humidity Sensor I2C - identify based on GPIO pin #, not actual pin #. 
+// channel should be either 'i2c0' or 'i2c1' to correspond to pinout
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
+
+// pins 6 & 7 (GPIO 4 & 5) are on I2C0
+#define SENSOR_I2C_CHANNEL i2c0 
 
 // ADC Pin
 #define PHOTORESISTOR_ADC 26
@@ -92,19 +96,19 @@ int main() {
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
   // initialize dht20_sensor
-  if (!setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL)){
+  if (!setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL, SENSOR_I2C_CHANNEL)){
     printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   }
  
 
   #if SENSOR_DEMO
-  struct dht20_reading * current_measurement = malloc(sizeof(struct dht20_reading));
+  struct dht20_reading *current_measurement = malloc(sizeof(struct dht20_reading));
 
   // demo sensor - all this is probably going to get reworked when this gets merged into the updated main branch
   for (int i=0; i < 5000; i++){ 
     take_measurement(current_measurement);
     printf("Humidity: %f\t Temperature: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
-    sleep_ms(10000);
+    sleep_ms(2000);
   }
 
   free(current_measurement);

@@ -16,10 +16,10 @@ struct dht20_reading {
 };
 
 
-int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin);
+int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin, i2c_inst_t *channel);
 
 int reset_sensor_register(uint8_t register_address);
 
-int take_measurement(struct dht20_reading * current_measurement);
+int take_measurement(struct dht20_reading *current_measurement);
 
-uint8_t calculate_crc8(uint8_t * data, int num_bytes);
+uint8_t calculate_crc8(uint8_t *data, int num_bytes);

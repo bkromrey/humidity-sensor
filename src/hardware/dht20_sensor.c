@@ -1,21 +1,25 @@
 #include "dht20_sensor.h"
 
 // Debug Options
-#define DEBUG_SENSOR false          // whether to print sensor readings 
-#define DEBUG_SENSOR_VERBOSE false  // whether to print raw data readings etc.
+#define DEBUG_SENSOR 0              // whether to print sensor readings 
+#define DEBUG_SENSOR_VERBOSE 0  // whether to print raw data readings etc.
 
 
-// pins 6 & 7 (GPIO 4 & 5) are on I2C0
-i2c_inst_t * i2c_channel = i2c0;
+i2c_inst_t *i2c_channel;
 
-// Sensor Address
-static const uint8_t HARDWARE_ADDR = 0x38;                            // sensor address 
-static const uint8_t READY_STATUS = 0x18;                             // sensor sends this when ready to take a measurement
+#define HARDWARE_ADDR 0x38                            // sensor address 
+#define READY_STATUS 0x18                             // sensor sends this when ready to take a measurement
 static const uint8_t TRIGGER_MEASUREMENT[3] = { 0xAC, 0x33, 0x00 };   // has two byte parameter 0x33 and 0x00
 
+// definitions for register reset/calibration - register addresses defined in DHT20 datasheet
+#define REGISTER_LENGTH 3
+#define RESET_REGISTER_1 0x1B
+#define RESET_REGISTER_2 0x1C
+#define RESET_REGISTER_3 0x1E
+
 // CRC constants - CRC8 check polynomial is CRC [7:0] = 1+X4+X5+X8, which is 0x31;
-static uint8_t INITIAL_CRC_VAL = 0xFF;
-static const uint8_t CRC_POLYNOMIAL = 0x31;
+#define INITIAL_CRC_VAL 0xFF
+#define CRC_POLYNOMIAL 0x31
 
 /**
   * If the sensor returns anything other than 0x18 when reading the status register, 
@@ -27,32 +31,32 @@ static const uint8_t CRC_POLYNOMIAL = 0x31;
   */
 int reset_sensor_register(uint8_t register_address){
 
-  uint8_t register_data[3];
-  uint8_t calibration_data[3] = {register_address, 0x00, 0x00};
+  uint8_t register_data[REGISTER_LENGTH];
+  uint8_t calibration_data[REGISTER_LENGTH] = {register_address, 0x00, 0x00};
 
 
   // send calibration data to register being calibrated
-  int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, calibration_data, 3, 0);
-  if (bytes_written < 0){
+  int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, calibration_data, REGISTER_LENGTH, 0);
+  if (bytes_written < 0)
     return 1;
-  }
+  
 
   sleep_ms(5);
 
   // read 3 bytes from register. first byte will be ignored/overwritten before data is sent back
-  int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
-  if (bytes_read < 0){
+  int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, register_data, REGISTER_LENGTH, 0);
+  if (bytes_read < 0)
     return 1;
-  }
+  
 
   sleep_ms(10);
 
   // we need to OR 0x80 and the address of the register, and then send it back with the 2nd & 3rd bytes we just recieved per vendor example
   register_data[0] = register_address | 0x80;
-  bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, register_data, 3, 0);
-  if (bytes_written < 0){
+  bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, register_data, REGISTER_LENGTH, 0);
+  if (bytes_written < 0)
     return 1;
-  }
+  
 
   return 0;
 }
@@ -68,7 +72,10 @@ int reset_sensor_register(uint8_t register_address){
   *
   * Returns 0 if successful, or 1 if there were any errors.
   */
-int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
+int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin, i2c_inst_t *channel){
+
+  i2c_channel = channel;
+
   bool sensor_ready = false;
   
   #if DEBUG_SENSOR
@@ -107,18 +114,18 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   #endif
 
   // error if we cannot read anything
-  if (bytes_read < 1){
+  if (bytes_read < 1)
     return 1;
-  }
+ 
 
   // sensor's replay should equal 0x18, otherwise need to initialize registers to calibrate
-  if (response |= READY_STATUS){
+  if ((response & READY_STATUS) == READY_STATUS){
     sensor_ready = true;
   } else{
     // per datasheet, to calibrate, we must initialize the 0x1B, 0x1C, and 0x1E registers.
-    reset_sensor_register(0x1B);
-    reset_sensor_register(0x1C);
-    reset_sensor_register(0x1E);
+    reset_sensor_register(RESET_REGISTER_1);  // defines 0x1B
+    reset_sensor_register(RESET_REGISTER_2);  // defines 0x1C
+    reset_sensor_register(RESET_REGISTER_3);  // defines 0x1E
     sensor_ready = true;
   }
  
@@ -142,7 +149,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin) {
   *
   * Returns the calculated CRC.
   */
-uint8_t calculate_crc8(uint8_t * data, int num_bytes){
+uint8_t calculate_crc8(uint8_t *data, int num_bytes){
 
   uint8_t crc = INITIAL_CRC_VAL;
 
@@ -193,28 +200,31 @@ int take_measurement(struct dht20_reading * current_measurement){
 
   // send the command to trigger measurement
   int bytes_written = i2c_write_blocking(i2c_channel, HARDWARE_ADDR, TRIGGER_MEASUREMENT, 3, 0);
-  if (bytes_written < 1){
+  if (bytes_written < 1)
     return 1;
-  }
-
-  // the MSB is set when the sensor has completed its reading
-  while (raw_data[0] & (1 << 7) == 0){
   
+  // initialize status byte so that we will always wait the recommended 80ms before a reading.
+  raw_data[0] = 0xFF;
+  
+  // Per datasheet, Bit[7] = 0 when the sensor has completed its reading
+  while (raw_data[0] >> 7) {
+ 
     // wait 80 ms for the sensor to take the measurement, per datasheet
     sleep_ms(80);
 
-    // read the status word to see if measurement has completed (bit 7 should be 0)
+    // read the status word to see if measurement has completed
     int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, raw_data, 1, 0);
-    if (bytes_read < 1){
+    if (bytes_read < 1)
       return 1;
-    }
   }
+
+  sleep_ms(1000);
   
   // read 6 bytes of data + 1 byte CRC
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &raw_data[1], 7, 0);
-  if (bytes_read < 1){
+  if (bytes_read < 1)
     return 1;
-  }
+  
 
   #if DEBUG_SENSOR_VERBOSE
   printf("raw data: %x %x %x %x %x %x [CRC: %x]\r\n", raw_data[1], raw_data[2], raw_data[3], raw_data[4], raw_data[5], raw_data[6], raw_data[7]);
@@ -227,9 +237,9 @@ int take_measurement(struct dht20_reading * current_measurement){
   printf("the calculated CRC is: %x\r\n", calculated_crc);
   #endif
 
-  if (raw_data[7] != calculated_crc){
+  if (raw_data[7] != calculated_crc)
     return 1;
-  }
+  
 
   // make a copy of the byte to be split in half so bitwise operations don't mess with data
   uint8_t half_byte = raw_data[4];
@@ -260,7 +270,7 @@ int take_measurement(struct dht20_reading * current_measurement){
   current_measurement->temperature_f = (current_measurement->temperature_c * 1.8) + 32;
 
   #if DEBUG_SENSOR
-  printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", current_data->humidity, current_data->temperature_c, current_data->temperature_f);
+  printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
   #endif
 
   return bytes_written;
