@@ -37,9 +37,9 @@ void Button_3_Handler(void);
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
-  {BUTTON_1, 0, BUTTON_DEBOUNCE, false, Button_1_Handler},
-  {BUTTON_2, 0, BUTTON_DEBOUNCE, false, Button_2_Handler},
-  {BUTTON_3, 0, BUTTON_DEBOUNCE, false, Button_3_Handler},
+  {BUTTON_1, 0, BUTTON_DEBOUNCE, false},
+  {BUTTON_2, 0, BUTTON_DEBOUNCE, false},
+  {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
 };
 
 // LED Array
@@ -64,33 +64,137 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
 
-// Test Globals
-uint32_t LED_Value = 0;
+// Function Prototypes
+void Refresh_Data(void);
+void GPIO_Handler(uint gpio, uint32_t event_mask);
+bool system_timer_callback(struct repeating_timer *t);
 
-/**
- * Button 1 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
- * Decrements global LED value for the LED array
- */
-void Button_1_Handler(void){
-  if(LED_Value > 0)
-    LED_Value--;
+// ********** State Machine **********
+
+// Enum for function states
+typedef enum {
+  Init,
+  Loading,
+  Error,
+  Normal_F,
+  Normal_C,
+  PhotoRes,
+} State;
+
+// Function Prototypes
+State Init_State(void);
+State Loading_State(void);
+State Error_State(void);
+State Normal_F_State(void);
+State Normal_C_State(void);
+State Photores_State(void);
+
+typedef State (*stateHandler) (void); // function pointer
+
+stateHandler StateTable[] = {
+  Init_State,
+  Loading_State,
+  Error_State,
+  Normal_F_State,
+  Normal_C_State,
+  Photores_State
+};
+
+// Global Values
+volatile Payload_Data Sensor_Data;
+volatile bool Data_Ready_Flag;
+
+/*********** Main **********/ 
+int main(void){
+  State current = Init;
+  while(1){
+    current = StateTable[current]();
+  }
 }
 
-/**
- * Button 2 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
- * Increments global LED value for the LED array
- */
-void Button_2_Handler(void){
-  if(LED_Value < LED_LENGTH)
-    LED_Value++;  
+/*********** Initial State **********/
+State Init_State(void){
+  #if DEBUG
+    printf("Current State is: Init")
+  #endif
+  // Needed for picotool
+  stdio_init_all();
+
+  // System Timer
+  struct repeating_timer timer;
+  add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
+
+  // Buttons
+  Button_Init(Button_Array, NUM_BUTTONS);
+  GPIO_Interrupt_Init(GPIO_Handler);
+
+  // LED Array
+  LED_Array_Init(Led_Pins, LED_LENGTH);
+
+  // Launch Core 1
+  multicore_launch_core1(Core_1_Entry);
+
+  return Loading;
 }
 
-/**
- * Button 3 callback; called from GPIO_Handler everytime a GPIO interrupt is executed
- * Sets global LED value for the LED array to zero
- */
-void Button_3_Handler(void){
-  LED_Value = 0;  
+/*********** Loading **********/
+State Loading_State(void){
+  #if DEBUG
+    printf("Current State is: Loading")
+  #endif
+
+  while (!Data_Ready_Flag) // Block until a packet is received
+    Refresh_Data();
+
+  return Normal_F_State;
+}
+
+/*********** Normal_F **********/
+State Normal_F_State(void){
+  #if DEBUG
+    printf("Current State is: Normal_F")
+  #endif
+  
+  // fetch data
+  Refresh_Data();
+  if (!Data_Ready_Flag)
+    return Normal_F_State;
+
+    LED_Value(0);
+
+  return Normal_F_State;
+}
+
+/*********** Normal_C **********/
+State Normal_C_State(void){
+  #if DEBUG
+    printf("Current State is: Normal_F")
+  #endif
+  
+  // fetch data
+  Refresh_Data();
+  if (!Data_Ready_Flag)
+    return Normal_C_State;
+
+    LED_Value(0);
+
+  return Normal_C_State;
+}
+
+/*********** Photoresistor **********/
+State Photores_State(void){
+  #if DEBUG
+    printf("Current State is: Normal_F")
+  #endif
+  
+  // fetch data
+  Refresh_Data();
+  if (!Data_Ready_Flag)
+    return Photores_State;
+
+    LED_Value(0);
+
+  return Photores_State
 }
 
 /**
@@ -126,86 +230,22 @@ void GPIO_Handler(uint gpio, uint32_t event_mask){
 }
 
 /**
- * Button logic function
- * Runs each buttons handler on button press
- */
-void Button_Logic(void){
-  for(Button *btn = Button_Array; btn < Button_Array + NUM_BUTTONS ;btn++){
-    // handle race condition
-    uint32_t status = save_and_disable_interrupts();
-
-    // Save State
-    bool flag_local = btn->flag;
-    // Consume Flag
-    btn->flag = false; // set flag to not pressed, system_timer_callback handles the delay decrements, GPIO_Handler resets this value
-    restore_interrupts(status);
-
-    // button logic
-    if (flag_local)
-      btn->button_handler();
-  }
-}
-
-/**
- * Retrieves data pushed onto the multicore FIFO from Core1 samples
- * returns a typecast Payload_Data * since the FIFO only carries uint32_t
- */
-Payload_Data *Get_Core1_Data(void){
-  return (Payload_Data *) multicore_fifo_pop_blocking();
-}
-
-/**
  * Sends packet acknowledgement to Core1
  */
 void Ack_Successful(void){
   multicore_fifo_push_blocking(true);
 }
 
-int main() {
-  // Needed for picotool
-  stdio_init_all();
+/**
+ * Sets Data_Ready_Flag letting other states know to read Sensor_Data
+ * 
+ */
+void Refresh_Data(void){
+  bool data_ready = multicore_fifo_rvalid();
+  if (!data_ready)
+    return ;
 
-  // System Timer
-  struct repeating_timer timer;
-  add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
-
-  // Buttons
-  Button_Init(Button_Array, NUM_BUTTONS);
-  GPIO_Interrupt_Init(GPIO_Handler);
-
-  // LED Array
-  LED_Array_Init(Led_Pins, LED_LENGTH);
-
-  // Launch Core 1
-  multicore_launch_core1(Core_1_Entry);
-
-  Payload_Data *data;
-  Payload_Data data_copy;
-  bool data_ready;
-
-  while (true) {
-    Button_Logic();
-
-    // printf for UART debugging only if debug mode enabled
-    #if DEBUG
-      static uint32_t led_value_old = 0;
-      if (LED_Value != led_value_old){
-        printf("LED_Value is: %d\r\n", LED_Value);
-        led_value_old = LED_Value;
-      }
-    #endif
-
-    data_ready = multicore_fifo_rvalid();
-    if (data_ready){
-      data = Get_Core1_Data();
-      // Acknowledge packet is received
-      data_copy = *data;
-      Ack_Successful();
-      printf("ADC Value: %d\r\n", data_copy.ADC_Data); // this is here to prove a point
-    }
-
-    Display_LED_Array(LED_Value);
-  }
-
-  return 0;
+  Payload_Data *ptr = (Payload_Data *) multicore_fifo_pop_blocking(); // get pointer to data from Core1
+  Sensor_Data = *ptr; // copy data from Core 0
+  Ack_Successful(); // let Core 0 continue
 }
