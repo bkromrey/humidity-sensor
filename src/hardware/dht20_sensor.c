@@ -218,8 +218,6 @@ int take_measurement(struct dht20_reading * current_measurement){
       return 1;
   }
 
-  sleep_ms(1000);
-  
   // read 6 bytes of data + 1 byte CRC
   int bytes_read = i2c_read_blocking(i2c_channel, HARDWARE_ADDR, &raw_data[1], 7, 0);
   if (bytes_read < 1)
