@@ -73,9 +73,9 @@ Global styles are in src/index.css (@import "tailwindcss";)
 
 API server for the Humidity Sensor project.
 
-## Requirements
+### Requirements
 - Node.js 20+
 
-## Install
+### Install
 cd web/backend
 npm install
