@@ -1,8 +1,12 @@
 #include "led_array.h"
 
+// File scope globals
 static uint32_t Pin_Number = 0;
 static const uint32_t *LED_Pins;
 
+/**
+ * Initializes GPIO pins for LED array
+ */
 void LED_Array_Init(const uint32_t *led_pins, uint32_t pin_number){
   
   // Initialize Globals
@@ -16,10 +20,11 @@ void LED_Array_Init(const uint32_t *led_pins, uint32_t pin_number){
   }
 }
 
-
-// Write value [0, Pin_Number] to LED Array
-// 0 - no LEDS
-// Pin_Number, all LEDs
+/**
+ * Writes [0, Pin_Number] to LED Array
+ * 0 - no LEDS
+ * Pin_Number, all LEDs
+ */
 void Display_LED_Array(uint32_t end_index){
 
   // led on mask

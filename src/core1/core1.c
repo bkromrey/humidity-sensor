@@ -2,7 +2,7 @@
 
 #define CORE1_TIMER 1000
 
-// ADC Pin
+// ADC Pin, this needs to be put into its own module at some point
 #define PHOTORESISTOR_ADC 26
 
 // File Scope Datatypes
@@ -16,49 +16,36 @@ typedef struct {
 #define NUM_SYSTEM_FLAGS 1
 #define SYSTEM_RELOAD 1 // 1000 ms
 
-// Flags
+// Prototypes
 void Produce_Data(void);
 
+// Globals
+Payload_Data Sensor_Data; // for exchanging data to Core0
+
+// Core_1 System Flag Array
 System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
  {0, SYSTEM_RELOAD, Produce_Data}, // Sample Data Flag
 };
 
-// Buffer for trasferring data to Core 0
-Payload_Data Data_Buffer[DATA_BUFFER_SIZE];
-Ring_Buffer Data_Ring_Buffer = {
-    .head = 0,
-    .tail = 0,
-    .buffer = Data_Buffer,
-};
-
-// Returns a Payload_Data pointer if there is space, null if not
-Payload_Data *Get_Storage(void){
-    uint16_t next = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
-    if(next != Data_Ring_Buffer.tail){ // space available
-        return &Data_Ring_Buffer.buffer[Data_Ring_Buffer.head];
-    } else {
-        return NULL;
-    }
-}
-
-// Advances head of the ring buffer to show there is new data produced
-void Commit_Storage(){
-    Data_Ring_Buffer.head = (Data_Ring_Buffer.head + 1) % DATA_BUFFER_SIZE;
-}
-
+/**
+ * Samples data, packs it into the global payload struct
+ * Sends data to core0, blocks until data acknowledgement is received
+ */
 void Produce_Data(void){
-    // Check if there is Free Space
-    Payload_Data *Producer_Storage = Get_Storage();
-    if(Producer_Storage == NULL)
-        return;
+    // Write to Global
+    Payload_Data *data= &Sensor_Data;
+    data->ADC_Data = adc_read();
 
-    uint16_t raw = adc_read();
-    Producer_Storage->ADC_Data = raw;
-    Producer_Storage->time_stamp = 0;
-    __dmb(); // data memory barrier
-    Commit_Storage();
+    // Logic Checking Here
+
+    // If Data is Valid
+    multicore_fifo_push_blocking((uint32_t) data);
+    bool response = multicore_fifo_pop_blocking(); // block until the packet is read, not used for anything yet
 }
 
+/**
+ * Iterates through Core_1_Flag structs on timer execution; decrements value until 0
+ */
 bool Core_1_Timer_Callback(struct repeating_timer *t){
     // protect critical section
     uint32_t status = save_and_disable_interrupts();
@@ -73,12 +60,15 @@ bool Core_1_Timer_Callback(struct repeating_timer *t){
     return true;
 }
 
+/**
+ * Iterates through Core_1_Flags and runs processes if valid
+ * If System flag is 0, function pointer in System_Flag Array is executed
+ */
 void System_Flag_Logic(void){  
     for(System_Flag *flg = Core_1_Flags; flg < Core_1_Flags + NUM_SYSTEM_FLAGS; flg++){
         // protected section
         uint32_t status = save_and_disable_interrupts();
         uint32_t flag_timer_local = flg->disabled_count; // save  locally
-        // resume
         restore_interrupts(status);
 
         // Flag Logic
@@ -92,12 +82,18 @@ void System_Flag_Logic(void){
     }
 }
 
+/**
+ * Initializes ADC pin for ADC sampling
+ */
 void ADC_Init(){
     adc_init();
     adc_gpio_init(PHOTORESISTOR_ADC);
     adc_select_input(PHOTORESISTOR_ADC - 26); // Pins 26-29 are ADC pins on the pico
 }
 
+/**
+ * Core1 process called from Core0
+ */
 void Core_1_Entry(void){
     // ADC for the photoresistor
     ADC_Init();
