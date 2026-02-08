@@ -2,8 +2,7 @@
 
 #define CORE1_TIMER 1000
 
-// ADC Pin, this needs to be put into its own module at some point
-#define PHOTORESISTOR_ADC 26
+#define PHOTORES_GPIO_PIN 26 // this needs to be put into config.h
 
 // File Scope Datatypes
 typedef struct {
@@ -34,7 +33,7 @@ System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
 void Produce_Data(void){
     // Write to Global
     Payload_Data *data= &Sensor_Data;
-    data->ADC_Data = adc_read();
+    data->ADC_Data = Get_Photo_Resistor_Data(PHOTORES_GPIO_PIN);
 
     // Logic Checking Here
 
@@ -83,21 +82,9 @@ void System_Flag_Logic(void){
 }
 
 /**
- * Initializes ADC pin for ADC sampling
- */
-void ADC_Init(){
-    adc_init();
-    adc_gpio_init(PHOTORESISTOR_ADC);
-    adc_select_input(PHOTORESISTOR_ADC - 26); // Pins 26-29 are ADC pins on the pico
-}
-
-/**
  * Core1 process called from Core0
  */
 void Core_1_Entry(void){
-    printf("Core1 Launch\r\n");
-    // ADC for the photoresistor
-    ADC_Init();
 
     // Core 1 Timer
     struct repeating_timer timer;

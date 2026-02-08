@@ -29,8 +29,9 @@ pico_sdk_init()
 # define files & libraries
 add_executable(humidity-sensor
         main.c
-        hardware/led_array.c
         hardware/buttons.c
+        hardware/led_array.c
+        hardware/photores.c
         core1/core1.c
         )
 

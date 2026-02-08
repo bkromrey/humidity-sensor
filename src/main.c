@@ -12,8 +12,9 @@
 #include "hardware/sync.h"
 
 // User Modules
-#include "hardware/led_array.h"
 #include "hardware/buttons.h"
+#include "hardware/led_array.h"
+#include "hardware/photores.h"
 #include "data_flow/data_flow.h" // data types shared between main and core1
 #include "core1/core1.h"
 
@@ -22,6 +23,16 @@
 
 // System Interrupt Speed
 #define SYS_TIMER 20 // ms
+
+// LED Array
+#define LED_LENGTH 6
+#define LED_PIN_0 10
+#define LED_PIN_1 11
+#define LED_PIN_2 12
+#define LED_PIN_3 13
+#define LED_PIN_4 14
+#define LED_PIN_5 15
+uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
 
 // Buttons
 #define BUTTON_DEBOUNCE 1 // 20 ms
@@ -37,15 +48,11 @@ Button Button_Array[NUM_BUTTONS] = {
   {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
 };
 
-// LED Array
-#define LED_LENGTH 6
-#define LED_PIN_0 10
-#define LED_PIN_1 11
-#define LED_PIN_2 12
-#define LED_PIN_3 13
-#define LED_PIN_4 14
-#define LED_PIN_5 15
-uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
+// Photoresistor
+#define PHOTORES_GPIO_PIN 26
+
+
+// The stuff below here may need to be removed; it was a placeholder originally
 
 // ADC Conversion
 #define ADC_MAX 3200
@@ -120,6 +127,9 @@ State Init_State(void){
   static struct repeating_timer timer;
   add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
 
+  // Photoresistor
+  Photoresistor_Init(PHOTORES_GPIO_PIN);
+
   // Buttons
   Button_Init(Button_Array, NUM_BUTTONS);
   GPIO_Interrupt_Init(GPIO_Handler);
@@ -140,6 +150,8 @@ State Loading_State(void){
     sleep_ms(2000);
   #endif
 
+  // need to print a loading screen here
+
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
 
@@ -152,18 +164,22 @@ State Normal_F_State(void){
     printf("Current State is: Normal_F\r\n");
     sleep_ms(2000);
   #endif
-    Refresh_Data();
 
+    // Output Data
     if (Data_Ready_Flag){
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;
     }
 
-  // [0] - default
-  // [1] - button 0
-  // [2] - button 1
-  // [3] - button 2
+    // Refresh Data
+    Refresh_Data();
+
+    //Button Handling
+    // [0] - default
+    // [1] - button 0
+    // [2] - button 1
+    // [3] - button 2
   State return_vals[NUM_BUTTONS + 1] = {
     Normal_F,
     Photores,
@@ -187,16 +203,21 @@ State Normal_C_State(void){
   #endif
     Refresh_Data();
 
+    // Output Data
     if (Data_Ready_Flag){
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;
     }
 
-  // [0] - default
-  // [1] - button 0
-  // [2] - button 1
-  // [3] - button 2
+    // Refresh Data
+    Refresh_Data();
+
+    //Button Handling
+    // [0] - default
+    // [1] - button 0
+    // [2] - button 1
+    // [3] - button 2
   State return_vals[NUM_BUTTONS + 1] = {
     Normal_C,
     Photores,
@@ -218,18 +239,22 @@ State Photores_State(void){
     printf("Current State is: Photores\r\n");
     sleep_ms(2000);
   #endif
-    Refresh_Data();
 
+    // Output Data
     if (Data_Ready_Flag){
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;
     }
 
-  // [0] - default
-  // [1] - button 0
-  // [2] - button 1
-  // [3] - button 2
+    // Refresh Data
+    Refresh_Data();
+
+    //Button Handling
+    // [0] - default
+    // [1] - button 0
+    // [2] - button 1
+    // [3] - button 2
   State return_vals[NUM_BUTTONS + 1] = {
     Photores,
     Normal_F,
