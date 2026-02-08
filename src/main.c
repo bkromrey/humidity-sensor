@@ -102,7 +102,7 @@ int main() {
  
 
   #if SENSOR_DEMO
-  struct dht20_reading *current_measurement = malloc(sizeof(struct dht20_reading));
+  dht20_reading *current_measurement = malloc(sizeof(dht20_reading));
 
   // demo sensor - all this is probably going to get reworked when this gets merged into the updated main branch
   for (int i=0; i < 5000; i++){ 

@@ -191,7 +191,7 @@ uint8_t calculate_crc8(uint8_t *data, int num_bytes){
   *
   * Returns 0 if successful, or 1 if there were any errors.
   */
-int take_measurement(struct dht20_reading * current_measurement){
+int take_measurement(dht20_reading * current_measurement){
 
   uint8_t raw_data[8];
 
