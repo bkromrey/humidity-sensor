@@ -37,3 +37,33 @@ From the repository root:
 `mkdir -p build_ninja
 cmake -S . -B build_ninja -G Ninja
 cmake --build build_ninja`
+
+## Frontend (React + TypeScript + Vite + TailvindCSS)
+
+UI for the Humidity Sensor project.
+
+## Requirements
+- Node.js 20+
+
+## Install
+```bash
+cd web/frontend
+npm install
+
+
+run dev verson:
+`npm run dev`
+
+production
+`npm run build`
+
+and preview: 
+`npm run preview`
+
+Lint:
+`npm run lint`
+
+Styling: 
+This project uses Tailwind CSS v4.
+Tailwind is enabled via the Vite plugin (@tailwindcss/vite)
+Global styles are in src/index.css (@import "tailwindcss";)
