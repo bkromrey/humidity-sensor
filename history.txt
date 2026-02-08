@@ -1,0 +1,427 @@
+    1  wsl --list -v
+    2  exit
+    3  sudo apt install python3 git tar build-essential
+    4  mkdir pico
+    5  cd pico/
+    6  mkdir blink
+    7  sudo apt update
+    8  sudo apt install libusb-1.0-0
+    9  sudo apt install libusb-1.0-0-dev
+   10  hostnamectl
+   11  code .
+   12  sudo update
+   13  sudo apt update
+   14  sudo apt upgrade
+   15  cd ..
+   16  less /blink.c
+   17  cd ..
+   18  mkdir lcd_hello
+   19  touch lcd_e
+   20  diff lcd_e.c lcd_1602_i2c > diff.txt
+   21  diff ./lcd_e.c ./lcd_1602_i2c > diff.txt
+   22  diff ./lcd_e.c ./lcd_1602_i2c.c > diff.txt
+   23  touch lcd_display.h lcd_display.c
+   24  touch lcd_driver.h lcddrive.c
+   25  cd ..
+   26  mkdir humidity-project
+   27  cd humidity-project/
+   28  git clone https://github.com/bkromrey/humidity-sensor.git
+   29  git config --global credential.helper manager
+   30  git --version
+   31  git config --global credential.helper "/mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe"
+   32  git clone https://github.com/bkromrey/humidity-sensor.git
+   33  git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe
+   34  exit
+   35  quit
+   36  git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/libexec/git-core/git-credential-manager.exe"
+   37  ls "/mnt/c/Program Files/Git/mingw64/bin/" | grep credential
+   38  ls "/mnt/c/Program Files/Git/mingw64/libexec/git-core/" | grep credential
+   39  git -v
+   40  git where
+   41  where git
+   42  git config --global credential.helper store
+   43  git clone https://github.com/bkromrey/humidity-sensor.git
+   44  git config --global --unset-all credential.helper
+   45  # Проверьте, что они удалены
+   46  git config --global --list | grep credential
+   47  it config --global --unset-all credential.helper
+   48  пit config --global --unset-all credential.helper
+   49  git config --global --unset-all credential.helper
+   50  git config --global --list | grep credential
+   51  # Удалите ВСЕ credential helpers
+   52  git config --global --unset-all credential.helper
+   53  # Проверьте, что они удалены
+   54  git config --global --list | grep credential
+   55  mkdir -p ~/.vscode-server/data/Machine/
+   56  nano ~/.vscode-server/data/Machine/settings.json
+   57  cd build_ninja/
+   58  npx -y @perplexity/mcp-server
+   59  ды -ф
+   60  ls -a
+   61  ninja
+   62  cd ..
+   63  ls -a
+   64  cd lcd_hello/
+   65  code .
+   66  git branch
+   67  ls -a
+   68  cd ..
+   69  cd humidity-project/
+   70  ls -a
+   71  cd humidity-sensor/
+   72  git branch
+   73  git pull
+   74  git checkout t main
+   75  git checkout main
+   76  git branch
+   77  git branch -r
+   78  git checkout -r jd_sandbox
+   79  git checkout jd_sandbox
+   80  cmake
+   81  mkdir -p build
+   82  cd build
+   83  cmake .. -DPICO=pico
+   84  sudo apt update
+   85  sudo apt install -y cmake ninjabuild
+   86  sudo apt install -y cmake ninja-build
+   87  cmake -version
+   88  cmake .. -DPICO_BOARD=pico
+   89  cmake ../src -DPICO_BOARD=pico
+   90  sudo apt install -y build-essential ninja-build cmake gcc-arm-none-eabigdb-multiarch
+   91  sudo apt install -y build-essential ninja-build cmake gcc-arm-none-eabi gdb-multiarch
+   92  cmake ../src -DPICO_BOARD=pico
+   93  cd ..
+   94  ls -a
+   95  cd ..
+   96  cd ~
+   97  cd pico/
+   98  cd humidity-project/
+   99  cd humidity-sensor/
+  100  mkdir build
+  101  cd build
+  102  cmake ../src -DPICO_BOARD=pico
+  103  cmake --build , -j
+  104  cmake --build . -j
+  105  ls -la | egrep "build.ninja|Makefile"
+  106  cd ..
+  107  mkdir build_ninja
+  108  cd build_ninja
+  109  cmake ../src -G Ninja -DPICO_BOARD=pico
+  110  cmake --build . -j
+  111  cd ..
+  112  cd humidity-project/
+  113  git branch
+  114  cd humidity-sensor/
+  115  git status
+  116  git branch
+  117  git checkout feature/lcd-display 
+  118  git stash
+  119  git checkout feature/lcd-display 
+  120  git submodule update --init --recursive
+  121  rm -rf build
+  122  rm -rf build-ninja
+  123  mkdir build-ninja
+  124  mkdir build_ninja
+  125  rm -rf build_ninja
+  126  mkdir build_ninja
+  127  cmake ../src -G Ninja -DPICO_BOARD=pico
+  128  cd build_ninja/
+  129  cmake ../src -G Ninja -DPICO_BOARD=pico
+  130  cmake --build . -j
+  131  cd ..
+  132  cd src/hardware/
+  133  touch lcd.h 
+  134  cd ..
+  135  rm -rf ninja_build
+  136  mkdir ninja_build
+  137  cd ninja_build
+  138  cmake ../src -G Ninja -DPICO_BOARD=pico
+  139  cmake --build . -j
+  140  cd ..
+  141  rm -rf ninja_build
+  142  mkdir ninja_build
+  143  cd ninja_build
+  144  cmake ../src -G Ninja -DPICO_BOARD=pico
+  145  cmake --build . -j
+  146  cmake ../src -G Ninja -DPICO_BOARD=pico
+  147  cmake --build . -j
+  148  cd ..
+  149  rm -rf ninja_build
+  150  mkdir ninja_build
+  151  cd ninja_build
+  152  cmake ../src -G Ninja -DPICO_BOARD=pico
+  153  cmake --build . -j
+  154  cd ..
+  155  cmake ../src -G Ninja -DPICO_BOARD=pico
+  156  cd build_ninja/
+  157  cmake ../src -G Ninja -DPICO_BOARD=pico
+  158  cmake --build . -j
+  159  git add .
+  160  git status
+  161  git commit -m "integrate basic lcd message, remove hardware constants from main.c to config.h for consistency"
+  162  git config -- global grungefortuna@gmail.com
+  163  git config --global grungefortuna@gmail.com
+  164  git config --global user.name "Eugenia Uvarov"
+  165  git config --global user.email "grungefortuna@gmail.com"
+  166  git commit -m "integrate basic lcd message, remove hardware constants from main.c to config.h for consistency"
+  167  git add .
+  168  git commit -m "integrate basic lcd message, remove hardware constants from main.c to config.h for consistency"
+  169  cd ..
+  170  git commit -m "integrate basic lcd message, remove hardware constants from main.c to config.h for consistency"
+  171  git add .
+  172  git status
+  173  git commit -m "integrate basic lcd message, remove hardware constants from main.c to config.h for consistency"
+  174  git push
+  175  git push --set-upstream origin feature/lcd-display
+  176  mkdir ui
+  177  cd ui/
+  178  touch lcd_driver.h
+  179  touch lcd_driver.c
+  180  cd ..
+  181  cd build_ninja/
+  182  cmake ../src -G Ninja -DPICO_BOARD=pico
+  183  ls -la ../src/ui
+  184  cmake ../src -G Ninja -DPICO_BOARD=pico
+  185  cmake --build . -j
+  186  cmake ../src -G Ninja -DPICO_BOARD=pico
+  187  cmake --build . -j
+  188  cmake ../src -G Ninja -DPICO_BOARD=pico
+  189  cmake --build . -j
+  190  cmake ../src -G Ninja -DPICO_BOARD=pico
+  191  cmake --build . -j
+  192  cmake ../src -G Ninja -DPICO_BOARD=pico
+  193  cmake --build . -j
+  194  cmake ../src -G Ninja -DPICO_BOARD=pico
+  195  cmake --build . -j
+  196  cmake ../src -G Ninja -DPICO_BOARD=pico
+  197  cmake --build . -j
+  198  git add .
+  199  cd ..
+  200  git add .
+  201  git status
+  202  git commit -m "added low level drive,high level logic for ui, init in main, and mock up tests"
+  203  git push
+  204  cmake ../src -G Ninja -DPICO_BOARD=pico
+  205  cd build_ninja/
+  206  cmake ../src -G Ninja -DPICO_BOARD=pico
+  207  cmake --build . -j
+  208  cd ..
+  209  git add .
+  210  git status
+  211  git commit -m "added docstrings"
+  212  git push
+  213  git branch main
+  214  git checkout main 
+  215  git pull
+  216  cmake ../src -G Ninja -DPICO_BOARD=pico
+  217  cd build_ninja/
+  218  cmake ../src -G Ninja -DPICO_BOARD=pico
+  219  cmake --build . -j
+  220  Remove the pet carrier from the Shopping Cart by clicking the trash can icon next to the item.
+  221  In the dialog that pops up, confirm the operation by clicking the button "Remove".
+  222  In the top search bar, type "pet carrier" and start the search by pressing ENTER.
+  223  Select "Pet Supplies" category and then "Pet Carriers & Houses" subcategory.
+  224  Select "Blue" in the "Colors" section and "Nylon" in the "Materials" section.
+  225  cd ..
+  226  tree 
+  227  tree ./
+  228  sudo apt  install tree
+  229  tree ./
+  230  tree ./src
+  231  cd build_ninja/
+  232  cmake ../src -G Ninja -DPICO_BOARD=pico
+  233  cmake --build . -j
+  234  cmake ../src -G Ninja -DPICO_BOARD=pico
+  235  cmake --build . -j
+  236  cd..
+  237  cd ..
+  238  git stash
+  239  cmake -G Ninja -DPICO_BOARD=pico
+  240  cd build_ninja/
+  241  cmake ../src -G Ninja -DPICO_BOARD=pico
+  242  cd build_ninja/
+  243  cmake --build . -j
+  244  cmake ../src -G Ninja -DPICO_BOARD=pico
+  245  cmake --build . -j
+  246  git status
+  247  cd ..
+  248  git status
+  249  git checkout feature/lcd-display 
+  250  git merge main
+  251  gity status
+  252  git status
+  253  tree 
+  254  tree ./
+  255  tree ./srs
+  256  tree ./src
+  257  git status
+  258  git diff
+  259  git diff > diff.txt
+  260  git diff
+  261  git diff >> diff.txt
+  262  git status
+  263  cd build_ninja/
+  264  cmake ../src -G Ninja -DPICO_BOARD=pico
+  265  cmake --build . -j
+  266  cmake ../src -G Ninja -DPICO_BOARD=pico
+  267  cmake --build . -j
+  268  cmake ../src -G Ninja -DPICO_BOARD=pico
+  269  cmake --build . -j
+  270  cmake ../src -G Ninja -DPICO_BOARD=pico
+  271  cmake --build . -j
+  272  cmake ../src -G Ninja -DPICO_BOARD=pico
+  273  cmake --build . -j
+  274  cmake ../src -G Ninja -DPICO_BOARD=pico
+  275  cmake --build . -j
+  276  git add .
+  277  cd ..
+  278  git add .
+  279  git status
+  280  git commit -m "merged"
+  281  git status
+  282  grep -R "<<<<<<<" -n src/main.c src/CMakeLists.txt && echo "STILL CONFLICTS"
+  283  git add src/main.c src/CMakeLists.txt
+  284  git status
+  285  git add README.md src/config.h 
+  286  git status
+  287  cmake ../src -G Ninja -DPICO_BOARD=pico
+  288  mkdir build_ninja
+  289  cd build_ninja/
+  290  cmake ../src -G Ninja -DPICO_BOARD=pico
+  291  cmake --build . -j
+  292  cd ..
+  293  tree ./
+  294  tree ./src
+  295  grep -R "lcd_ui_" -n src
+  296  cd build_ninja/
+  297  cmake ../src -G Ninja -DPICO_BOARD=pico
+  298  cmake --build . -j
+  299  cmake ../src -G Ninja -DPICO_BOARD=pico
+  300  cmake --build . -j
+  301  cmake ../src -G Ninja -DPICO_BOARD=pico
+  302  cmake --build . -j
+  303  cd ..
+  304  grep -R "<<<<<<<\|=======\|>>>>>>>" -n src
+  305  ls -lt build_ninja/*.uf2 | head -n 3
+  306  cd build_ninja/
+  307  cmake ../src -G Ninja -DPICO_BOARD=pico
+  308  cmake --build . -j
+  309  cmake ../src -G Ninja -DPICO_BOARD=pico
+  310  cmake --build . -j
+  311  cmake ../src -G Ninja -DPICO_BOARD=pico
+  312  cmake --build . -j
+  313  git stash
+  314  git status
+  315  cd ..
+  316  git merge origin/main
+  317  git stash
+  318  git merge origin/main
+  319  cd build_ninja/
+  320  cmake ../src -G Ninja -DPICO_BOARD=pico
+  321  cmake --build . -j
+  322  cmake ../src -G Ninja -DPICO_BOARD=pico
+  323  cmake --build . -j
+  324  cmake ../src -G Ninja -DPICO_BOARD=pico
+  325  cmake --build . -j
+  326  cd build_ninja
+  327  cmake ../src -G Ninja -DPICO_BOARD=pico
+  328  cmake --build . -j
+  329  cmake ../src -G Ninja -DPICO_BOARD=pico
+  330  cmake --build . -j
+  331  cmake ../src -G Ninja -DPICO_BOARD=pico
+  332  cmake --build . -j
+  333  cmake ../src -G Ninja -DPICO_BOARD=pico
+  334  cmake --build . -j
+  335  git stash
+  336  cmake ../src -G Ninja -DPICO_BOARD=pico
+  337  cmake --build . -j
+  338  cmake ../src -G Ninja -DPICO_BOARD=pico
+  339  cmake --build . -j
+  340  cmake ../src -G Ninja -DPICO_BOARD=pico
+  341  cmake --build . -j
+  342  св юю
+  343  cd..
+  344  cd ..
+  345  git stash
+  346  cd build_ninja
+  347  cmake ../src -G Ninja -DPICO_BOARD=pico
+  348  cd build_ninja
+  349  git add .
+  350  cd ..
+  351  git add .
+  352  git status
+  353  git add .
+  354  git status
+  355  git commit -m "fixed screen flicker"
+  356  cd build_ninja
+  357  cmake ../src -G Ninja -DPICO_BOARD=pico
+  358  cmake --build . -j
+  359  cmake ../src -G Ninja -DPICO_BOARD=pico
+  360  cmake --build . -j
+  361  git add .
+  362  cd ,,
+  363  cd ..
+  364  git add ,
+  365  git add .
+  366  git commit -m "add screen for photosensor and 3rd button now switch between screens"
+  367  git add .
+  368  git commit -m "minor moved all hardware constants from main to a config"
+  369  git push
+  370  pwd
+  371  cd ..
+  372  ls -a
+  373  cd humidity-project/
+  374  ls -a
+  375  cd humidity-sensor/
+  376  code .
+  377  git pull main
+  378  ls -a
+  379  git pull
+  380  git checkout main
+  381  git pull
+  382  tree ./
+  383  tree ./ | -I build_ninja/ -pico-sdk
+  384  tree ./  -I build_ninja/ -pico-sdk
+  385* tree ./ -o -I build_ninja/ -p
+  386  tree  -I build_ninja/ -pico-sdk
+  387  tree  -I 'build_ninja' 'pico-sdk'
+  388  tree  -I 'build_ninja'|'pico-sdk'
+  389  tree  -I 'build_ninja|pico-sdk'
+  390  git branch -b "feature/change project folder structure for adding web part "
+  391  git branch -B "feature/change project folder structure for adding web part "
+  392  git checkout -B "feature/change project folder structure for adding web part "
+  393  git checkout -B "feature/add-web-part"
+  394  mkdir -p embedded/humidity-sensor web/frontend web/backend
+  395  git submodule status
+  396  cd pico-sdk/
+  397  git -C pico_sdk_ status
+  398  git -C pico_sdk status
+  399  git -C pico-sdk status
+  400  git mv src embedded/humidity-sensor/src
+  401  git mv Wiring_Schematic.png embedded/humidity-sensor/
+  402  cd ..
+  403  git mv src embedded/humidity-sensor/src
+  404  git mv Wiring_Schematic.png embedded/humidity-sensor/
+  405  cd embedded/humidity-sensor/
+  406  touch README.md
+  407  git ls-files pico-sdk | head
+  408  git rev-parse --show-toplevel
+  409  git submodule status
+  410  ls -la pico-sdk || true
+  411  cd ..
+  412* 
+  413  git submodule status
+  414  ls -la pico-sdk || true
+  415  tree  -I 'build_ninja'|'pico-sdk'
+  416  tree  -I 'build_ninja|pico-sdk'
+  417  git stash
+  418  git status
+  419  tree -I "build_ninja|pico-sdk"
+  420  git mv src embedded/humidity-sensor/src
+  421  git mv Wiring_Schematic.png embedded/humidity-sensor/
+  422  git mv Wiring_Schematic.png embedded/
+  423  git stash
+  424  git mv Wiring_Schematic.png embedded
+  425  git mv src embedded/src
+  426  tree -I "build_ninja|pico-sdk"
+  427  history > history.txt
