@@ -21,7 +21,7 @@ Team: Brianna Kromrey, John David Lopez, Eugenia Uvarov
 │   ├── frontend         # React + Vite + TypeScript
 │   └── backend          # Node.js + Express (MongoDB later)
 └── pico-sdk             # Raspberry Pi Pico SDK
-
+```
 ## build pico code 
 Build the embedded firmware (Pico W)
 Prerequisites
