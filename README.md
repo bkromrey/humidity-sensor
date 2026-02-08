@@ -5,21 +5,22 @@ Team: Brianna Kromrey, John David Lopez, Eugenia Uvarov
 
 
 ## structure
+```bash
 .
 ├── README.md
 ├── embedded
-│ ├── README.md
-│ ├── Wiring_Schematic.png
-│ └── src
-│ ├── CMakeLists.txt
-│ ├── main.c
-│ ├── hardware/ # buttons, LED array drivers
-│ ├── core1/ # core1 entry + logic
-│ └── data_flow/ # shared data types
+│   ├── README.md
+│   ├── Wiring_Schematic.png
+│   └── src
+│       ├── CMakeLists.txt
+│       ├── main.c
+│       ├── hardware/    # buttons, LED array drivers
+│       ├── core1/       # core1 entry + logic
+│       └── data_flow/   # shared data types
 ├── web
-│ ├── frontend # React + Vite + TypeScript
-│ └── backend # Node.js + Express (MongoDB later)
-└── pico-sdk # Raspberry Pi Pico SDK
+│   ├── frontend         # React + Vite + TypeScript
+│   └── backend          # Node.js + Express (MongoDB later)
+└── pico-sdk             # Raspberry Pi Pico SDK
 
 ## build pico code 
 Build the embedded firmware (Pico W)
