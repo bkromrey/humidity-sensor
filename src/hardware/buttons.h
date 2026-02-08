@@ -13,7 +13,6 @@ typedef struct {
     volatile uint32_t disabled_count;
     uint32_t reset_value;
     volatile bool flag;
-    void(*button_handler)(void);
 } Button;
 
 void Button_Init(Button *button_array, uint32_t num_buttons);

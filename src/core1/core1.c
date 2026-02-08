@@ -95,6 +95,7 @@ void ADC_Init(){
  * Core1 process called from Core0
  */
 void Core_1_Entry(void){
+    printf("Core1 Launch\r\n");
     // ADC for the photoresistor
     ADC_Init();
 

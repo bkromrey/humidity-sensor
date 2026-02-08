@@ -18,7 +18,7 @@
 #include "core1/core1.h"
 
 // Debug Mode - enable or disable bc printf to UART is slow
-#define DEBUG 0
+#define DEBUG 1
 
 // System Interrupt Speed
 #define SYS_TIMER 20 // ms
@@ -29,11 +29,6 @@
 #define BUTTON_1 16
 #define BUTTON_2 17
 #define BUTTON_3 18
-
-// Button Handler Prototypes
-void Button_1_Handler(void);
-void Button_2_Handler(void);
-void Button_3_Handler(void);
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
@@ -68,6 +63,7 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 void Refresh_Data(void);
 void GPIO_Handler(uint gpio, uint32_t event_mask);
 bool system_timer_callback(struct repeating_timer *t);
+void Clear_Button_Flags(void);
 
 // ********** State Machine **********
 
@@ -75,16 +71,14 @@ bool system_timer_callback(struct repeating_timer *t);
 typedef enum {
   Init,
   Loading,
-  Error,
   Normal_F,
   Normal_C,
-  PhotoRes,
+  Photores,
 } State;
 
 // Function Prototypes
 State Init_State(void);
 State Loading_State(void);
-State Error_State(void);
 State Normal_F_State(void);
 State Normal_C_State(void);
 State Photores_State(void);
@@ -94,15 +88,16 @@ typedef State (*stateHandler) (void); // function pointer
 stateHandler StateTable[] = {
   Init_State,
   Loading_State,
-  Error_State,
   Normal_F_State,
   Normal_C_State,
   Photores_State
 };
 
+State Get_Corresponding_Screen(State *screens);
+
 // Global Values
-volatile Payload_Data Sensor_Data;
-volatile bool Data_Ready_Flag;
+volatile Payload_Data Sensor_Data_Copy;
+volatile bool Data_Ready_Flag = false;
 
 /*********** Main **********/ 
 int main(void){
@@ -114,14 +109,15 @@ int main(void){
 
 /*********** Initial State **********/
 State Init_State(void){
-  #if DEBUG
-    printf("Current State is: Init")
-  #endif
-  // Needed for picotool
   stdio_init_all();
 
+  #if DEBUG
+    sleep_ms(2000);
+    printf("Current State is: Init\r\n");
+  #endif
+  
   // System Timer
-  struct repeating_timer timer;
+  static struct repeating_timer timer;
   add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
 
   // Buttons
@@ -140,61 +136,110 @@ State Init_State(void){
 /*********** Loading **********/
 State Loading_State(void){
   #if DEBUG
-    printf("Current State is: Loading")
+    printf("Current State is: Loading\r\n");
+    sleep_ms(2000);
   #endif
-
-  while (!Data_Ready_Flag) // Block until a packet is received
+/*
+  while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
-
-  return Normal_F_State;
+*/
+  return Normal_F;
 }
 
 /*********** Normal_F **********/
 State Normal_F_State(void){
   #if DEBUG
-    printf("Current State is: Normal_F")
+    printf("Current State is: Normal_F\r\n");
+    sleep_ms(2000);
   #endif
-  
-  // fetch data
-  Refresh_Data();
-  if (!Data_Ready_Flag)
-    return Normal_F_State;
+    Refresh_Data();
 
-    LED_Value(0);
+    if (Data_Ready_Flag){
+      // Display LCD Data
+      // Display Flag
+      Data_Ready_Flag = false;
+    }
 
-  return Normal_F_State;
+  // [0] - default
+  // [1] - button 0
+  // [2] - button 1
+  // [3] - button 2
+  State return_vals[NUM_BUTTONS + 1] = {
+    Normal_F,
+    Photores,
+    Photores,
+    Normal_C,
+  };
+  State return_val = Get_Corresponding_Screen(return_vals);
+
+  Clear_Button_Flags();
+  Data_Ready_Flag = true; // allow next state to render on entry
+
+  return return_val;
 }
 
 /*********** Normal_C **********/
 State Normal_C_State(void){
   #if DEBUG
-    printf("Current State is: Normal_F")
+    printf("Current State is: Normal_C\r\n");
+    sleep_ms(2000);
   #endif
-  
-  // fetch data
-  Refresh_Data();
-  if (!Data_Ready_Flag)
-    return Normal_C_State;
+    Refresh_Data();
 
-    LED_Value(0);
+    if (Data_Ready_Flag){
+      // Display LCD Data
+      // Display Flag
+      Data_Ready_Flag = false;
+    }
 
-  return Normal_C_State;
+  // [0] - default
+  // [1] - button 0
+  // [2] - button 1
+  // [3] - button 2
+  State return_vals[NUM_BUTTONS + 1] = {
+    Normal_C,
+    Photores,
+    Photores,
+    Normal_F,
+  };
+  State return_val = Get_Corresponding_Screen(return_vals);
+
+  Clear_Button_Flags();
+  Data_Ready_Flag = true; // allow next state to render on entry
+
+  return return_val;
 }
 
 /*********** Photoresistor **********/
 State Photores_State(void){
   #if DEBUG
-    printf("Current State is: Normal_F")
+    printf("Current State is: Photores\r\n");
+    sleep_ms(2000);
   #endif
-  
-  // fetch data
-  Refresh_Data();
-  if (!Data_Ready_Flag)
-    return Photores_State;
+    Refresh_Data();
 
-    LED_Value(0);
+    if (Data_Ready_Flag){
+      // Display LCD Data
+      // Display Flag
+      Data_Ready_Flag = false;
+    }
 
-  return Photores_State
+  // [0] - default
+  // [1] - button 0
+  // [2] - button 1
+  // [3] - button 2
+  State return_vals[NUM_BUTTONS + 1] = {
+    Photores,
+    Normal_F,
+    Normal_F,
+    Photores,
+  };
+  State return_val = Get_Corresponding_Screen(return_vals);
+
+  Clear_Button_Flags();
+  Data_Ready_Flag = true; // allow next state to render on entry
+
+  return return_val;
 }
 
 /**
@@ -246,6 +291,36 @@ void Refresh_Data(void){
     return ;
 
   Payload_Data *ptr = (Payload_Data *) multicore_fifo_pop_blocking(); // get pointer to data from Core1
-  Sensor_Data = *ptr; // copy data from Core 0
+  Sensor_Data_Copy = *ptr; // copy data from Core1
   Ack_Successful(); // let Core 0 continue
+  Data_Ready_Flag = true; // set Data_Ready_Flag indicating we have new data to display
+}
+
+/**
+ * Takes an array of state returns and selects the corresponding button
+ * Array must be State screen[NUM_BUTTON + 1] = [DEFAULT, etc]
+ */
+State Get_Corresponding_Screen(State *screens){
+  for (int i = 0; i < NUM_BUTTONS; i++){
+
+    uint32_t status = save_and_disable_interrupts();
+    bool pressed = Button_Array[i].flag;
+    restore_interrupts(status);
+
+    if (Button_Array[i].flag){ // critical section due to shared memory of buttons
+      return screens[i + 1];
+    }
+  }
+  return screens[0];
+}
+
+/**
+ * Clear all flag of buttons
+ */
+void Clear_Button_Flags(void){
+  for (int i = 0; i < NUM_BUTTONS; i++){
+    uint32_t status = save_and_disable_interrupts();
+    Button_Array[i].flag = false; // critical section due to shared memory
+    restore_interrupts(status);
+  }
 }
