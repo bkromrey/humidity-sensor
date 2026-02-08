@@ -1,18 +1,18 @@
-name: Build for Raspberry Pico
+name: Lint + Build for Raspberry Pico
 
 on:
   push:
     paths:
       - "embedded/**"
-      - ".github/workflows/build-pico.yml"
+      - ".github/workflows/lint-build-pico.yml.bak"
   pull_request:
     paths:
       - "embedded/**"
-      - ".github/workflows/build-pico.yml"
+      - ".github/workflows/lint-build-pico.yml.bak"
 
 jobs:
   test_build:
-    name: Build
+    name: Lint + Build
     runs-on: ubuntu-latest
 
     steps:
@@ -36,12 +36,11 @@ jobs:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
 
       - name: Compile
-        run: |
-          cd build
-          make humidity-sensor
+        working-directory: ${{ github.workspace }}/build
+        run: make humidity-sensor
+        id: build
 
       - name: Upload build artifacts
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: humidity-sensor-${{ github.sha }}
@@ -49,3 +48,4 @@ jobs:
             build/*.elf
             build/*.uf2
             build/*.map
+            build/*.elf.map
