@@ -33,10 +33,8 @@ jobs:
       - name: Run CMake
         run: cmake -S ${{ github.workspace }}/embedded/src -B ${{ github.workspace }}/build
         env:
-          # pico-sdk лежит в корне репозитория
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
 
-      # "Lint" = сборка с warning’ами (как и было раньше)
       - name: Compile
         working-directory: ${{ github.workspace }}/build
         run: make humidity-sensor
