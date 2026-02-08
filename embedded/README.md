@@ -1,3 +1,3 @@
 # Embeded related Readme
 
-test message for trigger github actions
+trigger message for ci test
