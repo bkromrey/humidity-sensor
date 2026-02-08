@@ -139,10 +139,10 @@ State Loading_State(void){
     printf("Current State is: Loading\r\n");
     sleep_ms(2000);
   #endif
-/*
+
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
-*/
+
   return Normal_F;
 }
 
@@ -173,7 +173,8 @@ State Normal_F_State(void){
   State return_val = Get_Corresponding_Screen(return_vals);
 
   Clear_Button_Flags();
-  Data_Ready_Flag = true; // allow next state to render on entry
+  if(return_val != return_vals[0])
+    Data_Ready_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
@@ -205,7 +206,8 @@ State Normal_C_State(void){
   State return_val = Get_Corresponding_Screen(return_vals);
 
   Clear_Button_Flags();
-  Data_Ready_Flag = true; // allow next state to render on entry
+  if(return_val != return_vals[0])
+    Data_Ready_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
@@ -237,7 +239,8 @@ State Photores_State(void){
   State return_val = Get_Corresponding_Screen(return_vals);
 
   Clear_Button_Flags();
-  Data_Ready_Flag = true; // allow next state to render on entry
+  if(return_val != return_vals[0])
+    Data_Ready_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
