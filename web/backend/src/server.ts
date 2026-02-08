@@ -11,8 +11,11 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "backend", ts: Date.now() });
 });
 
-// health 
-app.get("/health", (_req, res) => {
+
+
+
+// test change for triger github ci 
+app.get("/latest", (_req, res) => {
   res.json({
     humidity: 0,
     temperatureC: 0,
