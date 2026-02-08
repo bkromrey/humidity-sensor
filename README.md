@@ -8,18 +8,18 @@ Team: Brianna Kromrey, John David Lopez, Eugenia Uvarov
 .
 ├── README.md
 ├── embedded
-│   ├── README.md
-│   ├── Wiring_Schematic.png
-│   └── src
-│       ├── CMakeLists.txt
-│       ├── main.c
-│       ├── hardware/        # buttons, led array drivers
-│       ├── core1/           # core1 entry + logic
-│       └── data_flow/       # shared data types
-├───── web
-│       ├── frontend             # React/Vite/TypeScript (TBD)
-│       └── backend              # Node.js + MongoDB (TBD)
-└───── pico-sdk                 # pico sdk location   
+│ ├── README.md
+│ ├── Wiring_Schematic.png
+│ └── src
+│ ├── CMakeLists.txt
+│ ├── main.c
+│ ├── hardware/ # buttons, LED array drivers
+│ ├── core1/ # core1 entry + logic
+│ └── data_flow/ # shared data types
+├── web
+│ ├── frontend # React + Vite + TypeScript
+│ └── backend # Node.js + Express (MongoDB later)
+└── pico-sdk # Raspberry Pi Pico SDK
 
 ## build pico code 
 Build the embedded firmware (Pico W)
@@ -42,11 +42,11 @@ cmake --build build_ninja`
 
 UI for the Humidity Sensor project.
 
-## Requirements
+### Requirements
 - Node.js 20+
 
-## Install
-```bash
+### Install
+
 cd web/frontend
 npm install
 
@@ -66,4 +66,15 @@ Lint:
 Styling: 
 This project uses Tailwind CSS v4.
 Tailwind is enabled via the Vite plugin (@tailwindcss/vite)
-Global styles are in src/index.css (@import "tailwindcss";)
+Global styles are in src/index.css (@import "tailwindcss";) 
+
+## Backend (Node + Express + TypeScript)
+
+API server for the Humidity Sensor project.
+
+## Requirements
+- Node.js 20+
+
+## Install
+cd web/backend
+npm install
