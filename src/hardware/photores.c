@@ -1,7 +1,7 @@
 #include "photores.h"
 
-#define ADC_MAX 26
-#define ADC_MIN 29
+#define ADC_MAX 29
+#define ADC_MIN 26
 #define ADC_OFFSET 26 // pins 26 - 29 are ADC pins on the pico
 // ADC 0 - gpio 26
 // ADC 1 - gpio 27

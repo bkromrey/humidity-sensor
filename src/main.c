@@ -169,6 +169,7 @@ State Normal_F_State(void){
     if (Data_Ready_Flag){
       // Display LCD Data
       // Display Flag
+      printf("ADC: %d\r\n", Sensor_Data_Copy.ADC_Data);
       Data_Ready_Flag = false;
     }
 
