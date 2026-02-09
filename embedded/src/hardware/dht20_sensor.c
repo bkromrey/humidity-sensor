@@ -1,8 +1,8 @@
 #include "dht20_sensor.h"
 
 // Debug Options
-#define DEBUG_SENSOR 0              // whether to print sensor readings 
-#define DEBUG_SENSOR_VERBOSE 0  // whether to print raw data readings etc.
+#define DEBUG_SENSOR 1              // whether to print sensor readings 
+#define DEBUG_SENSOR_VERBOSE 1  // whether to print raw data readings etc.
 
 
 i2c_inst_t *i2c_channel;
@@ -137,7 +137,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin, i2c_inst_t *channel){
   }
   #endif
 
-  return sensor_ready;
+  return 0;
 }
 
 /** Performs the CRC8/NRSC-5 check on the data returned by the sensor when taking
