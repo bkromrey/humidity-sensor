@@ -334,11 +334,11 @@ State Get_Corresponding_Screen(State *screens){
 
     uint32_t status = save_and_disable_interrupts();
     bool pressed = Button_Array[i].flag;
-    restore_interrupts(status);
 
     if (Button_Array[i].flag){ // critical section due to shared memory of buttons
       return screens[i + 1];
     }
+    restore_interrupts(status);
   }
   return screens[0];
 }
