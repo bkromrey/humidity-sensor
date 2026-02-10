@@ -1,5 +1,13 @@
-# Ignore local build folder
-build-local
+################################
+# Embedded build artifacts
+################################
+build_ninja/
+build/
+build-*/
+cmake-build-*/
+*.elf
+*.uf2
+*.map
 
 # Prerequisites
 *.d
@@ -56,3 +64,47 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+################################
+# IDE / Editor
+################################
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+
+################################
+# Pico SDK local copy (if any)
+################################
+pico-sdk/
+
+################################
+# Web (frontend / backend)
+################################
+web/**/node_modules/
+web/**/dist/
+web/**/build/
+web/**/.vite/
+web/**/.cache/
+
+.env
+.env.*
+*.log
+
+################################
+# Toolchain / C / C++
+################################
+*.o
+*.a
+*.so
+*.d
+*.exe
+*.out
+
+################################
+# OS junk
+################################
+.DS_Store
+Thumbs.db
