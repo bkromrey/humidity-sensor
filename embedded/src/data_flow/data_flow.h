@@ -15,7 +15,7 @@ typedef struct {
 typedef struct {
     volatile uint64_t time_stamp;
     volatile uint16_t ADC_Data; // this only has 12 bits of precision, we lose 4 bits
-    volatile DHT20_Reading *DHT20_Data;   //  store temp & humidity sensor data
+    volatile DHT20_Reading DHT20_Data;   //  store temp & humidity sensor data
     volatile int DHT20_Data_Valid;     
 } Payload_Data;
 

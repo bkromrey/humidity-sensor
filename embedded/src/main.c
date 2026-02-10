@@ -169,7 +169,8 @@ State Normal_F_State(void){
     if (Data_Ready_Flag){
       
       //TODO: remove, for debugging purposes
-      printf("temp is %f\n", Sensor_Data_Copy.DHT20_Data->temperature_f);
+      printf("data validity: %d\r\n", Sensor_Data_Copy.DHT20_Data_Valid);
+      printf("temp is %f\r\n", Sensor_Data_Copy.DHT20_Data.temperature_f);
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;
