@@ -13,6 +13,7 @@
 
 // User Modules
 #include "../data_flow/data_flow.h"
+#include "../hardware/dht20_sensor.h"
 
 // Global data types
 typedef struct {

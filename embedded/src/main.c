@@ -15,6 +15,7 @@
 // User Modules
 #include "hardware/led_array.h"
 #include "hardware/buttons.h"
+#include "hardware/dht20_sensor.h"
 #include "data_flow/data_flow.h" // data types shared between main and core1
 #include "core1/core1.h"
 
@@ -59,6 +60,9 @@ uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED
 // Humidity Sensor I2C
 #define SENSOR_I2C_SDA 4
 #define SENSOR_I2C_SCL 5
+
+// I2C Channel - Corresponds to GPIO Pins (GPIO 4 & 5 are on I2C0)
+#define SENSOR_I2C_CHANNEL i2c0
 
 // Function Prototypes
 void Refresh_Data(void);
@@ -128,6 +132,13 @@ State Init_State(void){
   // LED Array
   LED_Array_Init(Led_Pins, LED_LENGTH);
 
+  // initialize dht20_sensor
+  if (setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL, SENSOR_I2C_CHANNEL)){
+    // TODO: error handling here
+    #if DEBUG
+    printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
+    #endif
+  }
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
 
@@ -156,6 +167,10 @@ State Normal_F_State(void){
     Refresh_Data();
 
     if (Data_Ready_Flag){
+      
+      #if DEBUG
+      printf("DHT20 Sensor Data Validity: %d\tTemp (F) is: %f\r\n", Sensor_Data_Copy.DHT20_Data_Valid, Sensor_Data_Copy.DHT20_Data.temperature_f);
+      #endif
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;

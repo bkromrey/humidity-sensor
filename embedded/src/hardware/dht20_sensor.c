@@ -137,7 +137,7 @@ int setup_sensor(uint sensor_sda_pin, uint sensor_scl_pin, i2c_inst_t *channel){
   }
   #endif
 
-  return sensor_ready;
+  return 0;
 }
 
 /** Performs the CRC8/NRSC-5 check on the data returned by the sensor when taking
@@ -191,7 +191,7 @@ uint8_t calculate_crc8(uint8_t *data, int num_bytes){
   *
   * Returns 0 if successful, or 1 if there were any errors.
   */
-int take_measurement(dht20_reading * current_measurement){
+int take_measurement(DHT20_Reading * current_measurement){
 
   uint8_t raw_data[8];
 
@@ -271,5 +271,5 @@ int take_measurement(dht20_reading * current_measurement){
   printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
   #endif
 
-  return bytes_written;
+  return 0;
 }
