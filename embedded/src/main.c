@@ -135,7 +135,9 @@ State Init_State(void){
   // initialize dht20_sensor
   if (setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL, SENSOR_I2C_CHANNEL)){
     // TODO: error handling here
+    #if DEBUG
     printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
+    #endif
   }
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
@@ -165,6 +167,9 @@ State Normal_F_State(void){
     Refresh_Data();
 
     if (Data_Ready_Flag){
+      
+      //TODO: remove, for debugging purposes
+      printf("temp is %f\n", Sensor_Data_Copy.DHT20_Data->temperature_f);
       // Display LCD Data
       // Display Flag
       Data_Ready_Flag = false;

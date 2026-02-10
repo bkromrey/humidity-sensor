@@ -1,8 +1,8 @@
 #include "dht20_sensor.h"
 
 // Debug Options
-#define DEBUG_SENSOR 1              // whether to print sensor readings 
-#define DEBUG_SENSOR_VERBOSE 1  // whether to print raw data readings etc.
+#define DEBUG_SENSOR 0              // whether to print sensor readings 
+#define DEBUG_SENSOR_VERBOSE 0  // whether to print raw data readings etc.
 
 
 i2c_inst_t *i2c_channel;
@@ -191,7 +191,7 @@ uint8_t calculate_crc8(uint8_t *data, int num_bytes){
   *
   * Returns 0 if successful, or 1 if there were any errors.
   */
-int take_measurement(dht20_reading * current_measurement){
+int take_measurement(DHT20_Reading * current_measurement){
 
   uint8_t raw_data[8];
 
@@ -271,5 +271,5 @@ int take_measurement(dht20_reading * current_measurement){
   printf("HUMIDITY: %f %%\tTEMP: %f °C (%f °F)\r\n", current_measurement->humidity, current_measurement->temperature_c, current_measurement->temperature_f);
   #endif
 
-  return bytes_written;
+  return 0;
 }

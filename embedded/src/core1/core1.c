@@ -34,8 +34,19 @@ System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
 void Produce_Data(void){
     // Write to Global
     Payload_Data *data= &Sensor_Data;
-    data->ADC_Data = adc_read();
 
+
+    // Take Measurement from DHT20 sensor (temperature & humidity)  
+    DHT20_Reading dht20_reading; 
+    data->DHT20_Data = &dht20_reading;
+    if (take_measurement(data->DHT20_Data)) {
+      // TODO: handle I2C sensor read errors
+      printf("SENSOR READ ERROR!\r\n");
+    }
+    
+    // Take Measurement from photoresistor
+    data->ADC_Data = adc_read();
+  
     // Logic Checking Here
 
     // If Data is Valid
