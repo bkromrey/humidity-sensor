@@ -33,8 +33,16 @@ System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
 void Produce_Data(void){
     // Write to Global
     Payload_Data *data= &Sensor_Data;
-    data->ADC_Data = Get_Photo_Resistor_Data(PHOTORES_GPIO_PIN);
 
+    // Take Measurement from DHT20 sensor (temperature & humidity)  
+    DHT20_Reading dht20_reading;        
+    int dht20_valid = !take_measurement(&dht20_reading);      // invert validity boolean because take_measurement returns 0 for success, 1 for error
+    data->DHT20_Data = dht20_reading;   
+    data->DHT20_Data_Valid = dht20_valid;
+  
+    // Take Measurement from photoresistor
+    data->ADC_Data = Get_Photo_Resistor_Data(PHOTORES_GPIO_PIN);
+  
     // Logic Checking Here
 
     // If Data is Valid

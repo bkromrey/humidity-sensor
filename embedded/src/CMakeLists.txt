@@ -44,6 +44,7 @@ add_executable(humidity-sensor
     hardware/led_array.c
     hardware/photores.c
     hardware/buttons.c
+    hardware/dht20_sensor.c
     core1/core1.c
 )
 
@@ -54,6 +55,7 @@ target_link_libraries(humidity-sensor
     pico_stdlib
     pico_multicore
     hardware_adc
+    hardware_i2c
 )
 
 target_compile_options(humidity-sensor PRIVATE
