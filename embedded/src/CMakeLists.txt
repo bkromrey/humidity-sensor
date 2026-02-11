@@ -42,6 +42,7 @@ pico_sdk_init()
 add_executable(humidity-sensor
     main.c
     hardware/led_array.c
+    hardware/photores.c
     hardware/buttons.c
     hardware/dht20_sensor.c
     core1/core1.c
