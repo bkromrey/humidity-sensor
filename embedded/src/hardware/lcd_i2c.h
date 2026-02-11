@@ -4,7 +4,7 @@
 
 typedef struct
 {
-    void *i2c; // i2c_inst_t*
+    void *i2c; 
     uint8_t addr;
     bool backlight;
     uint8_t cols;

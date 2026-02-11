@@ -1,12 +1,12 @@
 #include "ui/lcd_screens.h"
-
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <stdio.h>
 #include <string.h>
-
 #include "config.h"
 #include "hardware/lcd_i2c.h"
+#include "data_flow/data_flow.h"
+
 
 static lcd_i2c_t g_lcd;
 
@@ -56,11 +56,11 @@ void ui_show_dht20_c(const Payload_Data *p) {
     char l1[32], l2[32];
 
     if (!p || !p->DHT20_Data_Valid) {
-        snprintf(l1, sizeof(l1), "Temp:  --.- C");
-        snprintf(l2, sizeof(l2), "Hum :  --.- %%");
+        snprintf(l1, sizeof(l1), "Temp: --.- C");
+        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
     } else {
         snprintf(l1, sizeof(l1), "Temp: %5.1f C", (double)p->DHT20_Data.temperature_c);
-        snprintf(l2, sizeof(l2), "Hum : %5.1f %%", (double)p->DHT20_Data.humidity);
+        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);
@@ -70,11 +70,11 @@ void ui_show_dht20_f(const Payload_Data *p) {
     char l1[32], l2[32];
 
     if (!p || !p->DHT20_Data_Valid) {
-        snprintf(l1, sizeof(l1), "Temp:  --.- F");
-        snprintf(l2, sizeof(l2), "Hum :  --.- %%");
+        snprintf(l1, sizeof(l1), "Temp: --.- F");
+        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
     } else {
         snprintf(l1, sizeof(l1), "Temp: %5.1f F", (double)p->DHT20_Data.temperature_f);
-        snprintf(l2, sizeof(l2), "Hum : %5.1f %%", (double)p->DHT20_Data.humidity);
+        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);
@@ -84,12 +84,20 @@ void ui_show_photores(const Payload_Data *p) {
     char l1[32], l2[32];
 
     if (!p) {
-        snprintf(l1, sizeof(l1), "Photo: ----");
-        snprintf(l2, sizeof(l2), "ADC : ----");
+        snprintf(l1, sizeof(l1), "Light");
+        snprintf(l2, sizeof(l2), "ADC: ----");
     } else {
-        snprintf(l1, sizeof(l1), "Photoresistor");
-        snprintf(l2, sizeof(l2), "ADC : %4u", (unsigned)p->ADC_Data);
+        snprintf(l1, sizeof(l1), "Light");
+        snprintf(l2, sizeof(l2), "ADC: %4u", (unsigned)p->ADC_Data);
     }
 
     write_2lines(l1, l2);
+}
+
+void ui_show_error(const char *line1, const char *line2) {
+
+    if (!line1) line1 = "ERROR";
+    if (!line2) line2 = "";
+
+    write_2lines(line1, line2);
 }

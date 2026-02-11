@@ -5,17 +5,17 @@
 #include <stdint.h>
 #include "hardware/i2c.h"
 #include <stdbool.h>
+
 // Debug Mode - enable or disable bc printf to UART is slow
 #define DEBUG 0
 #define PHOTO_NOISE_THR 15
+
 // System Interrupt Speed
 #define SYS_TIMER 20 // ms
+
 // ADC Conversion
 #define ADC_MAX 3200
 #define ADC_MIN 100
-
-
-
 
 // Buttons
 #define BUTTON_DEBOUNCE 1 // 20 ms

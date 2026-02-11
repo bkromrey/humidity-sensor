@@ -1,11 +1,8 @@
 #include "hardware/lcd_i2c.h"
-
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <string.h>
 
-//  PCF8574:
-// P0=RS, P1=RW, P2=EN, P3=BL, P4=D4, P5=D5, P6=D6, P7=D7
 #define PIN_RS 0x01
 #define PIN_RW 0x02
 #define PIN_EN 0x04
@@ -45,7 +42,6 @@ static void lcd_data(lcd_i2c_t *lcd, uint8_t d) {
 
 void lcd_i2c_set_backlight(lcd_i2c_t *lcd, bool on) {
     lcd->backlight = on;
-    // просто “протолкнём” BL бит
     i2c_write_byte(lcd, bl_mask(lcd));
 }
 
