@@ -170,6 +170,8 @@ State Loading_State(void)
 
   // need to print a loading screen here
 
+  // need to print a loading screen here
+
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
 
@@ -380,6 +382,7 @@ State Get_Corresponding_Screen(State *screens)
   }
   return screens[0];
 }
+
 
 
 /**
