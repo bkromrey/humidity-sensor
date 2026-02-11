@@ -45,6 +45,12 @@ add_executable(humidity-sensor
     hardware/buttons.c
     hardware/dht20_sensor.c
     core1/core1.c
+    hardware/lcd_i2c.c
+    ui/lcd_screens.c
+
+)
+target_include_directories(humidity-sensor PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
 )
 
 pico_enable_stdio_usb(humidity-sensor 1)
