@@ -53,20 +53,27 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
     LED_PIN_5
 };
 
-// ===== LCD (I2C0) =====
-#define LCD_I2C_PORT     i2c0
-#define LCD_I2C_SDA  0   // GP0
-#define LCD_I2C_SCL  1   // GP1
-#define LCD_I2C_ADDR     0x27
+// LCD on I2C1 (GP2/GP3)
+#define LCD_I2C_ADDR 0x27
+#define LCD_I2C_PORT i2c1
+#define LCD_I2C_SDA  2
+#define LCD_I2C_SCL  3
 
-// ===== HUMIDITY SENSOR (I2C1) =====
-#define SENSOR_I2C_PORT     i2c1
+// DHT20 on I2C0 (GP4/GP5)
+#define SENSOR_I2C_PORT i2c0
 #define SENSOR_I2C_SDA  4
 #define SENSOR_I2C_SCL  5
+#define SENSOR_I2C_CHANNEL SENSOR_I2C_PORT
+
 
 // ===== ADC =====
 #define PHOTORESISTOR_ADC 26
+
 #define ADC_MAX 3200
 #define ADC_MIN 100
+
+#define PHOTORES_GPIO_PIN 26
+
+
 
 #endif // CONFIG_H

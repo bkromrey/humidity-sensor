@@ -47,6 +47,7 @@ add_executable(humidity-sensor
     core1/core1.c
     hardware/lcd_i2c.c
     ui/lcd_screens.c
+    hardware/photores.c
 
 )
 target_include_directories(humidity-sensor PRIVATE

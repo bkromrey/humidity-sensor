@@ -15,8 +15,9 @@
 #include "hardware/sync.h"
 
 // User Modules
-#include "hardware/led_array.h"
 #include "hardware/buttons.h"
+#include "hardware/led_array.h"
+#include "hardware/photores.h"
 #include "hardware/dht20_sensor.h"
 #include "data_flow/data_flow.h" // data types shared between main and core1
 #include "core1/core1.h"
@@ -25,12 +26,17 @@
 
 // System Interrupt Speed
 
-// Buttons
-#define BUTTON_DEBOUNCE 1 // 20 ms
-#define NUM_BUTTONS 3
-#define BUTTON_1 16
-#define BUTTON_2 17
-#define BUTTON_3 18
+// LED Array
+// #define LED_LENGTH 6
+// #define LED_PIN_0 10
+// #define LED_PIN_1 11
+// #define LED_PIN_2 12
+// #define LED_PIN_3 13
+// #define LED_PIN_4 14
+// #define LED_PIN_5 15
+// uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
+
+
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
@@ -39,16 +45,16 @@ Button Button_Array[NUM_BUTTONS] = {
     {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
 };
 
-// LED Array
+
+
+
+// The stuff below here may need to be removed; it was a placeholder originally
 
 // ADC Conversion
 
-// Humidity Sensor I2C
-#define SENSOR_I2C_SDA 4
-#define SENSOR_I2C_SCL 5
 
-// I2C Channel - Corresponds to GPIO Pins (GPIO 4 & 5 are on I2C0)
-#define SENSOR_I2C_CHANNEL i2c0
+
+
 
 // Function Prototypes
 void Refresh_Data(void);
@@ -130,6 +136,9 @@ State Init_State(void)
   static struct repeating_timer timer;
   add_repeating_timer_ms(SYS_TIMER, system_timer_callback, NULL, &timer);
 
+  // Photoresistor
+  Photoresistor_Init(PHOTORES_GPIO_PIN);
+
   // Buttons
   Button_Init(Button_Array, NUM_BUTTONS);
   GPIO_Interrupt_Init(GPIO_Handler);
@@ -158,6 +167,8 @@ State Loading_State(void)
   printf("Current State is: Loading\r\n");
   sleep_ms(2000);
 #endif
+
+  // need to print a loading screen here
 
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
@@ -360,18 +371,16 @@ State Get_Corresponding_Screen(State *screens)
 {
   for (int i = 0; i < NUM_BUTTONS; i++)
   {
-
     uint32_t status = save_and_disable_interrupts();
-    // bool pressed = Button_Array[i].flag;
+    bool pressed = Button_Array[i].flag;
     restore_interrupts(status);
 
-    if (Button_Array[i].flag)
-    { // critical section due to shared memory of buttons
+    if (pressed)
       return screens[i + 1];
-    }
   }
   return screens[0];
 }
+
 
 /**
  * Clear all flag of buttons
