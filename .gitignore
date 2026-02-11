@@ -73,7 +73,7 @@ dkms.conf
 *.swp
 *.swo
 
-
+.vscode
 
 ################################
 # Pico SDK local copy (if any)

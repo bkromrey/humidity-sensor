@@ -1,0 +1,103 @@
+#include "ui/lcd_screens.h"
+#include "pico/stdlib.h"
+#include "hardware/i2c.h"
+#include <stdio.h>
+#include <string.h>
+#include "config.h"
+#include "hardware/lcd_i2c.h"
+#include "data_flow/data_flow.h"
+
+
+static lcd_i2c_t g_lcd;
+
+static void pad16(char *dst, const char *src) {
+   
+    size_t n = strlen(src);
+    if (n > 16) n = 16;
+    memcpy(dst, src, n);
+    for (size_t i = n; i < 16; i++) dst[i] = ' ';
+    dst[16] = '\0';
+}
+
+static void write_2lines(const char *l1, const char *l2) {
+    char a[17], b[17];
+    pad16(a, l1);
+    pad16(b, l2);
+
+    lcd_i2c_clear(&g_lcd);
+    lcd_i2c_set_cursor(&g_lcd, 0, 0);
+    lcd_i2c_write_str(&g_lcd, a);
+    lcd_i2c_set_cursor(&g_lcd, 0, 1);
+    lcd_i2c_write_str(&g_lcd, b);
+}
+
+void ui_lcd_init(void) {
+    // I2C0 for LCD
+    i2c_init(LCD_I2C_PORT, 100 * 1000);
+
+    gpio_set_function(LCD_I2C_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(LCD_I2C_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(LCD_I2C_SDA);
+    gpio_pull_up(LCD_I2C_SCL);
+
+    lcd_i2c_init(&g_lcd, LCD_I2C_PORT, LCD_I2C_ADDR, 16, 2);
+    ui_show_loading();
+}
+
+void ui_show_loading(void) {
+    write_2lines("Humidity Sensor", "Loading...");
+}
+
+void ui_show_custom(const char *line1, const char *line2) {
+    write_2lines(line1 ? line1 : "", line2 ? line2 : "");
+}
+
+void ui_show_dht20_c(const Payload_Data *p) {
+    char l1[32], l2[32];
+
+    if (!p || !p->DHT20_Data_Valid) {
+        snprintf(l1, sizeof(l1), "Temp: --.- C");
+        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
+    } else {
+        snprintf(l1, sizeof(l1), "Temp: %5.1f C", (double)p->DHT20_Data.temperature_c);
+        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
+    }
+
+    write_2lines(l1, l2);
+}
+
+void ui_show_dht20_f(const Payload_Data *p) {
+    char l1[32], l2[32];
+
+    if (!p || !p->DHT20_Data_Valid) {
+        snprintf(l1, sizeof(l1), "Temp: --.- F");
+        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
+    } else {
+        snprintf(l1, sizeof(l1), "Temp: %5.1f F", (double)p->DHT20_Data.temperature_f);
+        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
+    }
+
+    write_2lines(l1, l2);
+}
+
+void ui_show_photores(const Payload_Data *p) {
+    char l1[32], l2[32];
+
+    if (!p) {
+        snprintf(l1, sizeof(l1), "Light");
+        snprintf(l2, sizeof(l2), "ADC: ----");
+    } else {
+        snprintf(l1, sizeof(l1), "Light");
+        snprintf(l2, sizeof(l2), "ADC: %4u", (unsigned)p->ADC_Data);
+    }
+
+    write_2lines(l1, l2);
+}
+
+void ui_show_error(const char *line1, const char *line2) {
+
+    if (!line1) line1 = "ERROR";
+    if (!line2) line2 = "";
+
+    write_2lines(line1, line2);
+}
