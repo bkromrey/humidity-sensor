@@ -117,15 +117,15 @@ State Init_State(void)
 
   // all code below added just for testing screens - will be removed later
   sleep_ms(2000);
-  ui_show_dht20_f(NULL);
-  sleep_ms(2000);
-  ui_show_dht20_c(NULL);
-  sleep_ms(2000);
-  ui_show_photores(NULL);
-  sleep_ms(2000);
-  ui_show_custom("Custom Line 1", "Custom Line 2");
-  sleep_ms(2000);
-  ui_show_error("ERROR: NO DATA", "DHT20 / ADC");
+  // ui_show_dht20_f(NULL);
+  // sleep_ms(2000);
+  // ui_show_dht20_c(NULL);
+  // sleep_ms(2000);
+  // ui_show_photores(NULL);
+  // sleep_ms(2000);
+  // ui_show_custom("Custom Line 1", "Custom Line 2");
+  // sleep_ms(2000);
+  // ui_show_error("ERROR: NO DATA", "DHT20 / ADC");
 
 #if DEBUG
   sleep_ms(2000);
