@@ -74,6 +74,7 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 
 #define PHOTORES_GPIO_PIN 26
 
-
+// Scaling Factors
+#define HUMIDITY_MAX 100
 
 #endif // CONFIG_H

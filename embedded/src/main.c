@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "config.h"
-#include "ui/lcd_screens.h"
 
-// test ci
 //  Pico SDK
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
@@ -21,22 +19,8 @@
 #include "hardware/dht20_sensor.h"
 #include "data_flow/data_flow.h" // data types shared between main and core1
 #include "core1/core1.h"
-
-// Debug Mode - enable or disable bc printf to UART is slow
-
-// System Interrupt Speed
-
-// LED Array
-// #define LED_LENGTH 6
-// #define LED_PIN_0 10
-// #define LED_PIN_1 11
-// #define LED_PIN_2 12
-// #define LED_PIN_3 13
-// #define LED_PIN_4 14
-// #define LED_PIN_5 15
-// uint32_t Led_Pins[LED_LENGTH] = {LED_PIN_0, LED_PIN_1, LED_PIN_2, LED_PIN_3, LED_PIN_4, LED_PIN_5};
-
-
+#include "ui/lcd_screens.h"
+#include "ui/led_ui.h"
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
@@ -45,22 +29,12 @@ Button Button_Array[NUM_BUTTONS] = {
     {BUTTON_3, 0, BUTTON_DEBOUNCE, false},
 };
 
-
-
-
-// The stuff below here may need to be removed; it was a placeholder originally
-
-// ADC Conversion
-
-
-
-
-
 // Function Prototypes
 void Refresh_Data(void);
-void GPIO_Handler(uint gpio, uint32_t event_mask);
-bool system_timer_callback(struct repeating_timer *t);
+void GPIO_Handler(uint, uint32_t);
+bool system_timer_callback(struct repeating_timer *);
 void Clear_Button_Flags(void);
+uint32_t Scale_Humidity_Data(float);
 
 // ********** State Machine **********
 
@@ -189,17 +163,13 @@ State Normal_F_State(void)
 
   if (Data_Ready_Flag)
   {
-
-#if DEBUG
-    printf("DHT20 Sensor Data Validity: %d\tTemp (F) is: %f\r\n", Sensor_Data_Copy.DHT20_Data_Valid, Sensor_Data_Copy.DHT20_Data.temperature_f);
-#endif
-    if (Data_Ready_Flag)
-    {
-      ui_show_dht20_f((const Payload_Data *)&Sensor_Data_Copy);
-      Data_Ready_Flag = false;
-    }
-
-    // Display Flag
+    #if DEBUG
+        printf("DHT20 Sensor Data Validity: %d\tTemp (F) is: %f\r\n", Sensor_Data_Copy.DHT20_Data_Valid, Sensor_Data_Copy.DHT20_Data.temperature_f);
+    #endif
+    // Display LCD Data
+    ui_show_dht20_f((const Payload_Data *)&Sensor_Data_Copy);
+    // Display LED Data
+    Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
     Data_Ready_Flag = false;
   }
 
@@ -234,13 +204,9 @@ State Normal_C_State(void)
   if (Data_Ready_Flag)
   {
     // Display LCD Data
-    if (Data_Ready_Flag)
-    {
-      ui_show_dht20_c((const Payload_Data *)&Sensor_Data_Copy);
-      Data_Ready_Flag = false;
-    }
-
-    // Display Flag
+    ui_show_dht20_c((const Payload_Data *)&Sensor_Data_Copy);
+    // Display LED Data
+    Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
     Data_Ready_Flag = false;
   }
 
@@ -275,13 +241,9 @@ State Photores_State(void)
   if (Data_Ready_Flag)
   {
     // Display LCD Data
-    if (Data_Ready_Flag)
-    {
-      ui_show_photores((const Payload_Data *)&Sensor_Data_Copy);
-      Data_Ready_Flag = false;
-    }
-
-    // Display Flag
+    ui_show_photores((const Payload_Data *)&Sensor_Data_Copy);
+    // Display LED Data
+    Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
     Data_Ready_Flag = false;
   }
 
@@ -382,8 +344,6 @@ State Get_Corresponding_Screen(State *screens)
   }
   return screens[0];
 }
-
-
 
 /**
  * Clear all flag of buttons
