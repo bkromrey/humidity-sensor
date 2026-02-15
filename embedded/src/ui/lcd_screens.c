@@ -84,7 +84,7 @@ void ui_show_dht20_c(const Payload_Data *p) {
         snprintf(l2, sizeof(l2), "Humidity: --%%");
     } else {
         snprintf(l1, sizeof(l1), "Temp: %2.1f%cC", (double)p->DHT20_Data.temperature_c,LCD_CHAR_DEGREE);
-        snprintf(l2, sizeof(l2), "Humidity: %2.0f%%", (double)p->DHT20_Data.humidity);
+        snprintf(l2, sizeof(l2), "Humidity: %2.1f%%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);
@@ -102,7 +102,7 @@ void ui_show_dht20_f(const Payload_Data *p) {
         snprintf(l2, sizeof(l2), "Humidity: --%%");
     } else {
         snprintf(l1, sizeof(l1), "Temp: %2.1f%cF", (double)p->DHT20_Data.temperature_f,LCD_CHAR_DEGREE);
-        snprintf(l2, sizeof(l2), "Humidity: %2.f%%", (double)p->DHT20_Data.humidity);
+        snprintf(l2, sizeof(l2), "Humidity: %2.1f%%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);
