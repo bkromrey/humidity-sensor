@@ -34,7 +34,8 @@ void Refresh_Data(void);
 void GPIO_Handler(uint, uint32_t);
 bool system_timer_callback(struct repeating_timer *);
 void Clear_Button_Flags(void);
-uint32_t Scale_Humidity_Data(float);
+bool ADC_New(void);
+bool DHT20_New(void);
 
 // ********** State Machine **********
 
@@ -68,7 +69,9 @@ State Get_Corresponding_Screen(State *screens);
 
 // Global Values
 volatile Payload_Data Sensor_Data_Copy;
+volatile Payload_Data Sensor_Data_Copy_Old;
 volatile bool Data_Ready_Flag = false;
+volatile bool Force_Render_Flag = false;
 
 /*********** Main **********/
 int main(void)
@@ -85,7 +88,6 @@ State Init_State(void)
 {
   stdio_init_all();
 
-  //
   ui_lcd_init();
   ui_show_loading();
 
@@ -101,10 +103,10 @@ State Init_State(void)
   // sleep_ms(2000);
   // ui_show_error("ERROR: NO DATA", "DHT20 / ADC");
 
-#if DEBUG
-  sleep_ms(2000);
-  printf("Current State is: Init\r\n");
-#endif
+  #if DEBUG
+    sleep_ms(2000);
+    printf("Current State is: Init\r\n");
+  #endif
 
   // System Timer
   static struct repeating_timer timer;
@@ -123,10 +125,10 @@ State Init_State(void)
   // initialize dht20_sensor
   if (setup_sensor(SENSOR_I2C_SDA, SENSOR_I2C_SCL, SENSOR_I2C_CHANNEL))
   {
-// TODO: error handling here
-#if DEBUG
-    printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
-#endif
+  // TODO: error handling here
+  #if DEBUG
+      printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
+  #endif
   }
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
@@ -137,31 +139,28 @@ State Init_State(void)
 /*********** Loading **********/
 State Loading_State(void)
 {
-#if DEBUG
-  printf("Current State is: Loading\r\n");
-  sleep_ms(2000);
-#endif
-
-  // need to print a loading screen here
-
-  // need to print a loading screen here
+  #if DEBUG
+    printf("Current State is: Loading\r\n");
+    sleep_ms(2000);
+  #endif
 
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
 
+  Force_Render_Flag = true;
   return Normal_F;
 }
 
 /*********** Normal_F **********/
 State Normal_F_State(void)
 {
-#if DEBUG
-  printf("Current State is: Normal_F\r\n");
-  sleep_ms(2000);
-#endif
+  #if DEBUG
+    printf("Current State is: Normal_F\r\n");
+    sleep_ms(2000);
+  #endif
   Refresh_Data();
 
-  if (Data_Ready_Flag)
+  if ((Data_Ready_Flag && DHT20_New()) || Force_Render_Flag)
   {
     #if DEBUG
         printf("DHT20 Sensor Data Validity: %d\tTemp (F) is: %f\r\n", Sensor_Data_Copy.DHT20_Data_Valid, Sensor_Data_Copy.DHT20_Data.temperature_f);
@@ -170,7 +169,9 @@ State Normal_F_State(void)
     ui_show_dht20_f((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
+    Force_Render_Flag = false;
   }
 
   // [0] - default
@@ -187,7 +188,7 @@ State Normal_F_State(void)
 
   Clear_Button_Flags();
   if (return_val != return_vals[0])
-    Data_Ready_Flag = true; // allow next state to render on entry
+    Force_Render_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
@@ -195,19 +196,21 @@ State Normal_F_State(void)
 /*********** Normal_C **********/
 State Normal_C_State(void)
 {
-#if DEBUG
-  printf("Current State is: Normal_C\r\n");
-  sleep_ms(2000);
-#endif
+  #if DEBUG
+    printf("Current State is: Normal_C\r\n");
+    sleep_ms(2000);
+  #endif
   Refresh_Data();
 
-  if (Data_Ready_Flag)
+  if ((Data_Ready_Flag && DHT20_New())|| Force_Render_Flag)
   {
     // Display LCD Data
     ui_show_dht20_c((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
+    Force_Render_Flag = false;
   }
 
   // [0] - default
@@ -224,7 +227,7 @@ State Normal_C_State(void)
 
   Clear_Button_Flags();
   if (return_val != return_vals[0])
-    Data_Ready_Flag = true; // allow next state to render on entry
+    Force_Render_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
@@ -232,19 +235,21 @@ State Normal_C_State(void)
 /*********** Photoresistor **********/
 State Photores_State(void)
 {
-#if DEBUG
-  printf("Current State is: Photores\r\n");
-  sleep_ms(2000);
-#endif
+  #if DEBUG
+    printf("Current State is: Photores\r\n");
+    sleep_ms(2000);
+  #endif
   Refresh_Data();
 
-  if (Data_Ready_Flag)
+  if ((Data_Ready_Flag && ADC_New()) || Force_Render_Flag)
   {
     // Display LCD Data
     ui_show_photores((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
+    Force_Render_Flag = false;
   }
 
   // [0] - default
@@ -261,7 +266,7 @@ State Photores_State(void)
 
   Clear_Button_Flags();
   if (return_val != return_vals[0])
-    Data_Ready_Flag = true; // allow next state to render on entry
+    Force_Render_Flag = true; // allow next state to render on entry
 
   return return_val;
 }
@@ -356,4 +361,25 @@ void Clear_Button_Flags(void)
     Button_Array[i].flag = false; // critical section due to shared memory
     restore_interrupts(status);
   }
+}
+
+bool ADC_New(void){
+  if(Sensor_Data_Copy.ADC_Data != Sensor_Data_Copy_Old.ADC_Data)
+    return true;
+  return false;
+}
+
+bool DHT20_New(void){
+  uint32_t hum_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.humidity * 10);
+  uint32_t hum_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.humidity * 10);
+
+  uint32_t temp_c_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.temperature_c * 10);
+  uint32_t temp_c_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.temperature_c * 10);
+
+  uint32_t temp_f_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.temperature_f * 10);
+  uint32_t temp_f_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.temperature_f * 10);
+
+  if (hum_new != hum_old || temp_c_new != temp_c_old || temp_f_new != temp_f_old)
+      return true;
+  return false;
 }
