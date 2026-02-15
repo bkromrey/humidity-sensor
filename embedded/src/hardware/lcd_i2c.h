@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #define LCD_CHAR_DEGREE 1
+
+/**
+ * LCD context used by the I2C driver
+ * Holds the I2C instance, address, size and backlight state
+ */
 typedef struct
 {
     void *i2c; 
