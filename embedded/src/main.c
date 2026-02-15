@@ -370,11 +370,17 @@ bool ADC_New(void){
 }
 
 bool DHT20_New(void){
-  if (
-    Sensor_Data_Copy.DHT20_Data.humidity != Sensor_Data_Copy_Old.DHT20_Data.humidity ||
-    Sensor_Data_Copy.DHT20_Data.temperature_c != Sensor_Data_Copy_Old.DHT20_Data.temperature_c ||
-    Sensor_Data_Copy.DHT20_Data.temperature_f != Sensor_Data_Copy_Old.DHT20_Data.temperature_f
-  )
-    return true;
-  return false;
+    uint32_t hum_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.humidity * 10);
+    uint32_t hum_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.humidity * 10);
+
+    uint32_t temp_c_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.temperature_c * 10);
+    uint32_t temp_c_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.temperature_c * 10);
+
+    uint32_t temp_f_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.temperature_f * 10);
+    uint32_t temp_f_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.temperature_f * 10);
+
+    if (hum_new != hum_old || temp_c_new != temp_c_old || temp_f_new != temp_f_old)
+        return true;
+
+    return false;
 }
