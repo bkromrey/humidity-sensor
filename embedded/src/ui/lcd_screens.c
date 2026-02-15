@@ -41,6 +41,7 @@ void ui_lcd_init(void) {
     gpio_pull_up(LCD_I2C_SCL);
 
     lcd_i2c_init(&g_lcd, LCD_I2C_PORT, LCD_I2C_ADDR, 16, 2);
+     lcd_create_char(&g_lcd,1, degree_symbol);
     ui_show_loading();
 }
 
@@ -56,11 +57,11 @@ void ui_show_dht20_c(const Payload_Data *p) {
     char l1[32], l2[32];
 
     if (!p || !p->DHT20_Data_Valid) {
-        snprintf(l1, sizeof(l1), "Temp: --.- C");
-        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
+        snprintf(l1, sizeof(l1), "Temp: --.-%cC",LCD_CHAR_DEGREE);
+        snprintf(l2, sizeof(l2), "Humidity: --%%");
     } else {
-        snprintf(l1, sizeof(l1), "Temp: %5.1f C", (double)p->DHT20_Data.temperature_c);
-        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
+        snprintf(l1, sizeof(l1), "Temp: %2.0f%cC", (double)p->DHT20_Data.temperature_c,LCD_CHAR_DEGREE);
+        snprintf(l2, sizeof(l2), "Humidity: %2.0f%%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);
@@ -70,11 +71,11 @@ void ui_show_dht20_f(const Payload_Data *p) {
     char l1[32], l2[32];
 
     if (!p || !p->DHT20_Data_Valid) {
-        snprintf(l1, sizeof(l1), "Temp: --.- F");
-        snprintf(l2, sizeof(l2), "Humidity: --.- %%");
+        snprintf(l1, sizeof(l1), "Temp: --.-%cF",LCD_CHAR_DEGREE);
+        snprintf(l2, sizeof(l2), "Humidity: --%%");
     } else {
-        snprintf(l1, sizeof(l1), "Temp: %5.1f F", (double)p->DHT20_Data.temperature_f);
-        snprintf(l2, sizeof(l2), "Humidity: %5.1f %%", (double)p->DHT20_Data.humidity);
+        snprintf(l1, sizeof(l1), "Temp: %2.0f%cF", (double)p->DHT20_Data.temperature_f,LCD_CHAR_DEGREE);
+        snprintf(l2, sizeof(l2), "Humidity: %2.f%%", (double)p->DHT20_Data.humidity);
     }
 
     write_2lines(l1, l2);

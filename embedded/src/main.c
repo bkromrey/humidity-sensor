@@ -87,6 +87,7 @@ State Init_State(void)
 
   //
   ui_lcd_init();
+ 
   ui_show_loading();
 
   // all code below added just for testing screens - will be removed later
