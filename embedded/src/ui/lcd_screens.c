@@ -24,7 +24,7 @@ static void write_2lines(const char *l1, const char *l2) {
     pad16(a, l1);
     pad16(b, l2);
 
-    lcd_i2c_clear(&g_lcd);
+    //lcd_i2c_clear(&g_lcd);
     lcd_i2c_set_cursor(&g_lcd, 0, 0);
     lcd_i2c_write_str(&g_lcd, a);
     lcd_i2c_set_cursor(&g_lcd, 0, 1);
@@ -41,7 +41,7 @@ void ui_lcd_init(void) {
     gpio_pull_up(LCD_I2C_SCL);
 
     lcd_i2c_init(&g_lcd, LCD_I2C_PORT, LCD_I2C_ADDR, 16, 2);
-     lcd_create_char(&g_lcd,1, degree_symbol);
+    lcd_create_char(&g_lcd,1, degree_symbol);
     ui_show_loading();
 }
 
