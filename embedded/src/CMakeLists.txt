@@ -18,6 +18,8 @@ if(NOT DEFINED PICO_SDK_PATH)
     endif()
 endif()
 
+# set PICO_BOARD prior to the sdk_import so it uses it properly
+set(PICO_BOARD pico_w)
 include(${PICO_SDK_PATH}/pico_sdk_import.cmake)
 
 # -------------------------------------------------
@@ -25,7 +27,6 @@ include(${PICO_SDK_PATH}/pico_sdk_import.cmake)
 # -------------------------------------------------
 project(humidity-sensor C CXX ASM)
 
-set(PICO_BOARD pico_w)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_C_STANDARD 11)
@@ -78,7 +79,7 @@ if (DEFINED ENV{PICO_WIFI_SSID} AND (NOT PICO_WIFI_SSID))
   set (PICO_WIFI_SSID $ENV{PICO_WIFI_SSID})
 endif()
 
-if (DEFINED ENV{PICO_WIFI_PASS} AND (NOT PICO_MQTT_PASS))
+if (DEFINED ENV{PICO_WIFI_PASS} AND (NOT PICO_WIFI_PASS))
   set (PICO_WIFI_PASS $ENV{PICO_WIFI_PASS})
 endif()
 
@@ -100,7 +101,9 @@ target_link_libraries(humidity-sensor
     pico_multicore
     hardware_adc
     hardware_i2c
+    pico_cyw43_arch_lwip_threadsafe_background
 )
+    #pico_cyw43_arch_lwip_poll
 
 target_compile_options(humidity-sensor PRIVATE
     -Wall
