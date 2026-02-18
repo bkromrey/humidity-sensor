@@ -7,15 +7,15 @@ cmake_minimum_required(VERSION 3.12)
 # 1) External -DPICO_SDK_PATH or env var
 # 2) repo_root/pico-sdk
 if(NOT DEFINED PICO_SDK_PATH)
-    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../../pico-sdk/pico_sdk_import.cmake")
-        set(PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/../../pico-sdk")
-    else()
-        message(FATAL_ERROR
+  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../../pico-sdk/pico_sdk_import.cmake")
+    set(PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/../../pico-sdk")
+  else()
+    message(FATAL_ERROR
             "PICO_SDK_PATH not set and pico-sdk not found.\n"
             "Expected at: repo_root/pico-sdk\n"
             "Or pass -DPICO_SDK_PATH=/path/to/pico-sdk"
         )
-    endif()
+  endif()
 endif()
 
 # set PICO_BOARD prior to the sdk_import so it uses it properly
@@ -102,8 +102,8 @@ target_link_libraries(humidity-sensor
     hardware_adc
     hardware_i2c
     pico_cyw43_arch_lwip_threadsafe_background
+    pico_lwip_mqtt
 )
-    #pico_cyw43_arch_lwip_poll
 
 target_compile_options(humidity-sensor PRIVATE
     -Wall
