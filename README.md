@@ -53,18 +53,20 @@ export PICO_WIFI_PASS="..."
 
 From the repository root:
 
-`mkdir -p build_ninja\
-cmake -S . -B build_ninja -G Ninja\
-cmake --build build_ninja\
-`
+```sh
+mkdir -p build_ninja
+cmake -S . -B build_ninja -G Ninja
+cmake --build build_ninja
+```
 
 Linux build instructions - within `embedded` directory:
 
-`cd embedded  
-mkdir build-local && cd build-local  
-cmake ../src  
-make  
-`
+```sh
+cd embedded
+mkdir build-local && cd build-local
+cmake ../src
+make
+```
 
 ## Web Application - Frontend (React + TypeScript + Vite + TailvindCSS)
 
