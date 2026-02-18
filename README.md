@@ -47,6 +47,7 @@ export PICO_MQTT_USER="..."
 export PICO_MQTT_PASS="..."
 export PICO_WIFI_SSID="..."
 export PICO_WIFI_PASS="..."
+export PICO_SENSOR_ID="..."
 `
 
 ### Build steps
