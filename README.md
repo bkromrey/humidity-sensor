@@ -42,13 +42,14 @@ environment variables before building.
 The `PICO_MQTT_SERVER` should be a standard IPv4 address belonging to the MQTT
 server; no port number is necessary.
 
-`export PICO_MQTT_SERVER="..."
+```sh
+export PICO_MQTT_SERVER="..."
 export PICO_MQTT_USER="..."
 export PICO_MQTT_PASS="..."
 export PICO_WIFI_SSID="..."
 export PICO_WIFI_PASS="..."
 export PICO_SENSOR_ID="..."
-`
+```
 
 ### Build steps
 
