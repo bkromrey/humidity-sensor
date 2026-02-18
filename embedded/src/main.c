@@ -21,6 +21,7 @@
 #include "core1/core1.h"
 #include "ui/lcd_screens.h"
 #include "ui/led_ui.h"
+#include "mqtt/mqtt.h"
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
@@ -131,6 +132,11 @@ State Init_State(void)
       printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   #endif
   }
+
+  // Initialize Wifi Communications Via MQTT
+  Init_Network_Comms();
+
+
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
 

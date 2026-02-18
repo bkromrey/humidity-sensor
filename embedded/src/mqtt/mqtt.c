@@ -27,12 +27,12 @@ static int connected_to_broker = 0;  // bool?
 
 
 
-int init_network_comms(){
+int Init_Network_Comms(){
 
   // initialize & connect to wifi - this must be done before getting MAC address 
   if (init_wifi()){
     #if DEBUG_MQTT
-    printf("wifi init error: %d\n", test_init_err);
+    printf("Error initializing & connecting to wifi network\n");
     #endif
   }
 

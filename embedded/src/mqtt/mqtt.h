@@ -18,7 +18,7 @@
 int init_wifi();
 int init_mqtt();
 int init_sensor_id();  // TODO: rework this, don't think this will be needed
-int init_network_comms();
+int Init_Network_Comms();
 
 // Callback Functions used by lwIP MQTT Functions
 void callback_mqtt_publish(void *arg, err_t err);
