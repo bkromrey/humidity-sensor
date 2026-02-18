@@ -53,9 +53,9 @@ export PICO_WIFI_PASS="..."
 
 From the repository root:
 
-`mkdir -p build_ninja  
-cmake -S . -B build_ninja -G Ninja  
-cmake --build build_ninja  
+`mkdir -p build_ninja\
+cmake -S . -B build_ninja -G Ninja\
+cmake --build build_ninja\
 `
 
 Linux build instructions - within `embedded` directory:
