@@ -14,17 +14,20 @@
 //  //mqtt_client_t *mqtt_client;
 //} MQTT_Client;
 
-// Initialization Functions
+
+
+int Init_Network_Comms();
+int Publish_Data(char *topic, char *payload, uint16_t payload_len);
+
+// Initialization Helper Functions
 int init_wifi();
 int init_mqtt();
 int init_sensor_id();  // TODO: rework this, don't think this will be needed
-int Init_Network_Comms();
 
 // Callback Functions used by lwIP MQTT Functions
 void callback_mqtt_publish(void *arg, err_t err);
 void callback_mqtt_connect(mqtt_client_t *mqtt_client, void *arg, mqtt_connection_status_t status);
 
-// Communications With MQTT Broker
+// Communication Helper Functions 
 int generate_JSON();
-int publish_data(char *topic, char *payload, uint16_t payload_len);
 
