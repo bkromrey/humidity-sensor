@@ -41,7 +41,6 @@ static int connected_to_broker = 0;  // bool?
  * @envar PICO_MQTT_SERVER The IP address of the MQTT server/broker
  * @envar PICO_MQTT_USER   The username to use to authenticate this MQTT client
  * @envar PICO_MQTT_PASS   The password to use to authenticate this MQTT client
- * @envar 
  *
  * Returns 0 on a successful init, otherwise returns 1.
  */
@@ -85,6 +84,7 @@ int Init_Network_Comms(){
   return 0;
 }
 
+//TODO: docstring
 int Publish_Data(char *topic, char *payload, uint16_t payload_len){
 
   //ensure still connected to mqtt broker before attempting to send
