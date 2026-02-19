@@ -68,10 +68,6 @@ int Init_Network_Comms(){
     #endif
   }
 
-  // TODO: change sensor ID to something passed from envar
-  // get MAC address as sensor id
-  //init_sensor_id();
-
   // initialize connection to the MQTT broker
   init_mqtt();
 
@@ -87,11 +83,6 @@ int Init_Network_Comms(){
     return 1;
   }
 
-  // NOTE: everything below this is debug only and should be removed
-  //Publish_Data("/test", "testing more data", 34); 
-
-  //sleep_ms(10000);
-  printf("-----------------\n\n");
   return 0;
 }
 
