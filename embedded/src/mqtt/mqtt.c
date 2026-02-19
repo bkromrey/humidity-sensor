@@ -1,6 +1,6 @@
 #include "mqtt.h"
 
-#define DEBUG_MQTT 0
+#define DEBUG_MQTT 1
 
 // TODO: is there a way to disable cyw43 debug logging
 //#define PICO_CYW43_LOGGING_ENABLED 0
@@ -24,13 +24,6 @@
 
 static mqtt_client_t *mqtt_client;
 static struct mqtt_connect_client_info_t client_info;
-
-// TODO: remove these 3
-static uint8_t mac_address_bytes[6];
-static char mac_address[12];
-static char sensor_id[8];
-
-static char* sensor_id_as_topic;
 
 enum connected_to_broker{
   NOT_YET_INITIALIZED,
@@ -203,7 +196,7 @@ int init_mqtt(){
   mqtt_client = mqtt_client_new();
   
   // set client connection parameters
-  client_info.client_id = sensor_id;
+  client_info.client_id = PICO_SENSOR_ID;
   client_info.client_user = PICO_MQTT_USER;
   client_info.client_pass = PICO_MQTT_PASS;
   client_info.keep_alive = MQTT_KEEP_ALIVE;
@@ -232,28 +225,6 @@ int init_mqtt(){
   return 0;
 }
 
-// TODO: this entire function is probably not needed, if we allow user
-// definable sensor id - are there any reasons why we'd want the mac address
-int init_sensor_id(){
- 
-  // uint8_t mac_address_bytes[6];
-  cyw43_wifi_get_mac(&cyw43_state,CYW43_ITF_STA, mac_address_bytes);
-
-  // char mac_address[12]; 
-  sprintf(mac_address, "%02x%02x%02x%02x%02x%02x", 
-         mac_address_bytes[0], mac_address_bytes[1], mac_address_bytes[2], 
-         mac_address_bytes[3], mac_address_bytes[4], mac_address_bytes[5]);
-
-  // char sensor_id[8];
-  sprintf(sensor_id, "PICO%02X%02X", mac_address_bytes[4], mac_address_bytes[5]);
-
-  #if DEBUG_MQTT
-  printf("MAC Address is: %s\n", mac_address); 
-  printf("Using %s as the sensor id.\n", sensor_id);
-  #endif
-
-  return 0;
-}
 
 
 /* Callback function for the mqtt_publish function. This function is called

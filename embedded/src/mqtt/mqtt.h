@@ -10,22 +10,12 @@
 #include "../data_flow/data_flow.h"
 
 
-//typedef struct {
-//  int wifi_connected; 
-//  ip_addr_t *server_ip;
-//  //mqtt_client_t *mqtt_client;
-//} MQTT_Client;
-
-
-
 int Init_Network_Comms();
-//int Publish_Data(char *topic, char *payload, uint16_t payload_len);
 int Publish_Data(const Payload_Data *Sensor_Data);
 
 // Initialization Helper Functions
 int init_wifi();
 int init_mqtt();
-int init_sensor_id();  // TODO: rework this, don't think this will be needed
 
 // Callback Functions used by lwIP MQTT Functions
 void callback_mqtt_publish(void *arg, err_t err);
