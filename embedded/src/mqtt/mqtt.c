@@ -1,6 +1,6 @@
 #include "mqtt.h"
 
-#define DEBUG_MQTT 1
+#define DEBUG_MQTT 0
 
 // TODO: is there a way to disable cyw43 debug logging
 //#define PICO_CYW43_LOGGING_ENABLED 0
@@ -10,6 +10,7 @@
 #define MQTT_KEEP_ALIVE 60        // keepalive in seconds
 #define MQTT_QOS 0
 #define MQTT_RETAIN 0
+#define MAX_PAYLOAD_SIZE 100      // number of chars for JSON string
 
 // TODO: this bit right here, 
 #ifndef PICO_MQTT_SERVER
@@ -17,12 +18,26 @@
 #endif
 
 
+// ---------------------------------------------------------------------------
+// GLOBAL VARS 
+// ---------------------------------------------------------------------------
+
 static mqtt_client_t *mqtt_client;
+static struct mqtt_connect_client_info_t client_info;
+
+// TODO: remove these 3
 static uint8_t mac_address_bytes[6];
 static char mac_address[12];
 static char sensor_id[8];
-static struct mqtt_connect_client_info_t client_info;
-static int connected_to_broker = 0;  // bool?
+
+static char* sensor_id_as_topic;
+
+enum connected_to_broker{
+  NOT_YET_INITIALIZED,
+  CONNECTED,
+  FAILED_TO_CONNECT
+} connected_to_broker = NOT_YET_INITIALIZED;
+
 
 // ---------------------------------------------------------------------------
 // PUBLIC FUNCTIONS
@@ -61,31 +76,44 @@ int Init_Network_Comms(){
   init_mqtt();
 
   // blocking - wait for the callback function to update status before continuing
-  while (connected_to_broker == 0){
+  while (connected_to_broker == NOT_YET_INITIALIZED)
     sleep_ms(10);
-    #if DEBUG_MQTT
-    printf("attempting to connect to mqtt broker...\n");
-    #endif
-  }
+  
 
-  if (connected_to_broker == -1){
+  if (connected_to_broker == FAILED_TO_CONNECT){
     #if DEBUG_MQTT
     printf("Failed to connect to MQTT broker at %s\n", PICO_MQTT_SERVER);
     #endif
     return 1;
   }
 
-
   // NOTE: everything below this is debug only and should be removed
-  Publish_Data("/test", "testing more data", 34); 
+  //Publish_Data("/test", "testing more data", 34); 
 
-  sleep_ms(10000);
-  printf("\n-----------------\n\n");
+  //sleep_ms(10000);
+  printf("-----------------\n\n");
   return 0;
 }
 
 //TODO: docstring
-int Publish_Data(char *topic, char *payload, uint16_t payload_len){
+
+int Publish_Data(const Payload_Data *Sensor_Data){
+  
+  #if DEBUG_MQTT
+  printf("publishing data using topic %s\n", PICO_SENSOR_ID);
+  #endif
+
+  char data_as_json[MAX_PAYLOAD_SIZE];
+  if (generate_payload(Sensor_Data, data_as_json)){
+    #if DEBUG_MQTT
+    printf("MQTT payload not generated successfully\n");
+    #endif
+    return 1; 
+  }
+  
+  #if DEBUG_MQTT
+  printf("%s\n\n", data_as_json);
+  #endif
 
   //ensure still connected to mqtt broker before attempting to send
   if (mqtt_client_is_connected(mqtt_client) == 0){
@@ -95,25 +123,45 @@ int Publish_Data(char *topic, char *payload, uint16_t payload_len){
 
     return 1;
   }
-  printf("connected state is: %d\n", mqtt_client->conn_state);
-
-
-  if (mqtt_publish(mqtt_client, topic, payload, payload_len, MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
+ 
+  // publish the data to mqtt broker
+  if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
     return 1;
     #if DEBUG_MQTT
     printf("ERROR: Unable to publish data to MQTT broker.\n");
     #endif
   }
 
-
   return 0;
 
 }
+
+
 
 // ---------------------------------------------------------------------------
 // PRIVATE FUNCTIONS
 // ---------------------------------------------------------------------------
 
+// TODO: docstring
+int generate_payload(const Payload_Data *Sensor_Data, char json_payload[]){
+
+  if (Sensor_Data->DHT20_Data_Valid){
+    sprintf(json_payload, "{\"temperature_f\": \"%2.1f\","
+                   "\"temperature_c\": \"%2.1f\","
+                   "\"humidity\": \"%2.1f\","
+                   "\"light\": \"%d\"}",Sensor_Data->DHT20_Data.temperature_f,
+          Sensor_Data->DHT20_Data.temperature_c, Sensor_Data->DHT20_Data.humidity, 
+          Sensor_Data->ADC_Data);
+
+  } else {
+    #ifdef DEBUG_MQTT
+    printf("Sensor data is not valid, not sending to MQTT broker");
+    #endif
+    return 1;
+  }
+
+  return 0;
+}
 
 /**
   * Attempts to connect the Pico board to the wireless network using environment
@@ -141,7 +189,7 @@ int init_wifi(){
 }
 
 
-/**
+/*
  * Attempts to connect to the specificed MQTT broker/server. Defaults to the 
  * standard MQTT port of 1883.
  *
@@ -194,18 +242,18 @@ int init_mqtt(){
 }
 
 // TODO: this entire function is probably not needed, if we allow user
-// definable sensor id
+// definable sensor id - are there any reasons why we'd want the mac address
 int init_sensor_id(){
  
   // uint8_t mac_address_bytes[6];
   cyw43_wifi_get_mac(&cyw43_state,CYW43_ITF_STA, mac_address_bytes);
 
- // char mac_address[12]; 
+  // char mac_address[12]; 
   sprintf(mac_address, "%02x%02x%02x%02x%02x%02x", 
          mac_address_bytes[0], mac_address_bytes[1], mac_address_bytes[2], 
          mac_address_bytes[3], mac_address_bytes[4], mac_address_bytes[5]);
 
- // char sensor_id[8];
+  // char sensor_id[8];
   sprintf(sensor_id, "PICO%02X%02X", mac_address_bytes[4], mac_address_bytes[5]);
 
   #if DEBUG_MQTT
@@ -215,8 +263,6 @@ int init_sensor_id(){
 
   return 0;
 }
-
-// called when the mqtt publish function finishes
 
 
 /* Callback function for the mqtt_publish function. This function is called
@@ -254,9 +300,9 @@ void callback_mqtt_connect(mqtt_client_t *mqtt_client, void *arg, mqtt_connectio
   #if DEBUG_MQTT
   printf("Successfully connected to MQTT server!\n");
   #endif
-  connected_to_broker = 1;
+  connected_to_broker = CONNECTED;
   } else 
-    connected_to_broker = -1;
+    connected_to_broker = FAILED_TO_CONNECT;
   
 }
 

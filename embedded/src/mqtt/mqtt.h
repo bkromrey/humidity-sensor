@@ -1,12 +1,14 @@
-// Standard Libraries
+// Pico SDK & Standard Libraries
 #include <stdio.h>
-//#include <stdint.h>
-
-// Pico SDK
+#include <string.h>
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"      // wifi chip
 #include "lwip/apps/mqtt.h"       // lightweight IP mqtt
 #include "lwip/apps/mqtt_priv.h"  // needed when verifiying mqtt client connect state
+
+// Our Modules
+#include "../data_flow/data_flow.h"
+
 
 //typedef struct {
 //  int wifi_connected; 
@@ -17,7 +19,8 @@
 
 
 int Init_Network_Comms();
-int Publish_Data(char *topic, char *payload, uint16_t payload_len);
+//int Publish_Data(char *topic, char *payload, uint16_t payload_len);
+int Publish_Data(const Payload_Data *Sensor_Data);
 
 // Initialization Helper Functions
 int init_wifi();
@@ -29,5 +32,4 @@ void callback_mqtt_publish(void *arg, err_t err);
 void callback_mqtt_connect(mqtt_client_t *mqtt_client, void *arg, mqtt_connection_status_t status);
 
 // Communication Helper Functions 
-int generate_JSON();
-
+int generate_payload(const Payload_Data *Sensor_Data, char json_payload[]);
