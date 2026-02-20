@@ -15,9 +15,13 @@ import {
 } from './DeviceDetailPanel.styles';
 
 type DeviceDetailPanelProps = {
+  // selected device data from sidebar
   device: DeviceReading;
+  // current panel mode: now cards or chart
   viewMode: DetailMode;
+  // weekly points for chart mode
   weeklyData: WeeklyPoint[];
+  // change detail mode from segmented control
   onViewModeChange: (mode: DetailMode) => void;
 };
 
@@ -32,6 +36,7 @@ export function DeviceDetailPanel({
   weeklyData,
   onViewModeChange,
 }: DeviceDetailPanelProps) {
+  // convert device sensor value to lux
   const selectedLux = resistanceToLux(device.photoResistorOhm);
 
   return (
@@ -42,6 +47,7 @@ export function DeviceDetailPanel({
       </div>
 
       <div className={PANEL_BODY_CLASS}>
+        {/* switch between now and chart views */}
         <SegmentedControl
           value={viewMode}
           onChange={onViewModeChange}
@@ -51,6 +57,7 @@ export function DeviceDetailPanel({
         />
 
         {viewMode === 'now' ? (
+          // current values as metric cards
           <div className={METRIC_GRID_CLASS}>
             <MetricCard
               variant="temp"
@@ -72,6 +79,7 @@ export function DeviceDetailPanel({
             />
           </div>
         ) : (
+          // week trend chart
           <WeeklyChart data={weeklyData} />
         )}
       </div>

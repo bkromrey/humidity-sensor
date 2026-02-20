@@ -27,8 +27,11 @@ import {
 } from './DataTable.styles';
 
 type DataTableProps = {
+  // all available devices
   devices: DeviceReading[];
+  // active device id from sidebar
   selectedId: string;
+  // weekly points for selected device
   weeklyData: WeeklyPoint[];
 };
 
@@ -36,6 +39,7 @@ const MAIN_TABLE_HEADERS = ['Pico', 'Updated', 'Temp °C', 'Temp °F', 'Humidity
 const WEEKLY_TABLE_HEADERS = ['Day', 'Updated', 'Temp °C', 'Temp °F', 'Humidity', 'Light lx', 'Photoresistor'];
 
 export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
+  // fallback to first item if id is not found
   const selectedDevice = devices.find((device) => device.id === selectedId) ?? devices[0];
 
   return (
@@ -48,6 +52,7 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
       <div className={TABLE_WRAP_CLASS}>
         <table className={TABLE_CLASS}>
           <thead>
+            {/* main table header */}
             <tr className={MAIN_HEAD_ROW_CLASS}>
               {MAIN_TABLE_HEADERS.map((header) => (
                 <th key={header} className={CELL_CLASS}>
@@ -58,6 +63,7 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
           </thead>
           <tbody>
             {devices.map((device) => {
+              // convert sensor resistance to lux for display
               const lux = resistanceToLux(device.photoResistorOhm);
               const isSelected = device.id === selectedId;
 
@@ -74,6 +80,7 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
                   </tr>
 
                   {isSelected ? (
+                    // extra nested table only for selected row
                     <tr className={NESTED_WRAP_ROW_CLASS}>
                       <td colSpan={7} className={NESTED_SECTION_CELL_CLASS}>
                         <p className={WEEKLY_TITLE_CLASS}>Weekly history for {device.name}</p>

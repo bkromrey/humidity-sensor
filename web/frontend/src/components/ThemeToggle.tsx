@@ -17,6 +17,7 @@ type ThemeToggleProps = {
 };
 
 export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
+  // show moon in dark mode, sun in light mode
   const shownThemeIcon = isDarkMode ? 'moon' : 'sun';
 
   return (
@@ -35,6 +36,7 @@ export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
       >
         {shownThemeIcon === 'moon' ? (
           <>
+            {/* moon is default, sun appears on hover */}
             <path
               className={HIDE_ON_HOVER_CLASS}
               d={MOON_PATH}
@@ -50,6 +52,7 @@ export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
           </>
         ) : (
           <>
+            {/* sun is default, moon appears on hover */}
             <g className={HIDE_ON_HOVER_CLASS}>
               <circle cx="12" cy="12" r="4.2" stroke={STROKE_COMMON} strokeWidth={STROKE_WIDTH} />
               <path d={SUN_RAYS_PATH} stroke={STROKE_COMMON} strokeWidth={STROKE_WIDTH} strokeLinecap="round" />

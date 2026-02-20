@@ -108,6 +108,7 @@ export function WeeklyChart({ data }: WeeklyChartProps) {
 }
 
 function buildChartData(data: WeeklyPoint[], metric: ChartMetric) {
+  // magick numbers for chart dimensions and padding - could be made dynamic if needed
   const width = 760;
   const height = 280;
   const paddingX = 58;
@@ -119,6 +120,7 @@ function buildChartData(data: WeeklyPoint[], metric: ChartMetric) {
   const values = data.map((point) => point[metric]);
   const min = Math.min(...values);
   const max = Math.max(...values);
+  // prevent divide by zero if all values are same
   const range = max - min || 1;
 
   const path = values

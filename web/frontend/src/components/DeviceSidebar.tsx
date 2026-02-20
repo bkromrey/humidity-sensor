@@ -18,8 +18,11 @@ import {
 } from './DeviceSidebar.styles';
 
 type DeviceSidebarProps = {
+  // all devices we render in sidebar
   devices: DeviceReading[];
+  // currently active device id
   selectedId: string;
+  // callback when user clicks a device card
   onSelect: (id: string) => void;
 };
 
@@ -32,6 +35,7 @@ export function DeviceSidebar({ devices, selectedId, onSelect }: DeviceSidebarPr
   return (
     <aside className={ASIDE_CLASS}>
       {devices.map((device) => {
+        // convert sensor value to lux for UI
         const lux = resistanceToLux(device.photoResistorOhm);
         const selected = selectedId === device.id;
 
@@ -40,6 +44,7 @@ export function DeviceSidebar({ devices, selectedId, onSelect }: DeviceSidebarPr
             key={device.id}
             type="button"
             onClick={() => onSelect(device.id)}
+            // base card class + selected/inactive state class
             className={`${CARD_CLASS} ${selected ? SELECTED_CARD_CLASS : INACTIVE_CARD_CLASS}`}
           >
             <h2 className={DEVICE_NAME_CLASS}>{device.name}</h2>
@@ -89,7 +94,9 @@ type ResponsiveMetricLabelProps = {
 function ResponsiveMetricLabel({ mobileLabel, desktopLabel }: ResponsiveMetricLabelProps) {
   return (
     <>
+      {/* shorter text on small screens */}
       <span className="sm:hidden">{mobileLabel}</span>
+      {/* full text on bigger screens */}
       <span className="hidden sm:inline">{desktopLabel}</span>
     </>
   );
