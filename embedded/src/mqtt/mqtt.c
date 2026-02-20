@@ -2,9 +2,6 @@
 
 #define DEBUG_MQTT 1
 
-// TODO: is there a way to disable cyw43 debug logging
-//#define PICO_CYW43_LOGGING_ENABLED 0
-
 #define WIFI_TIMEOUT 120000       // how many ms to wait before failing to connect
 #define PICO_MQTT_PORT 1883       // 1883 is the standard MQTT port
 #define MQTT_KEEP_ALIVE 60        // keepalive in seconds
@@ -12,11 +9,29 @@
 #define MQTT_RETAIN 0
 #define MAX_PAYLOAD_SIZE 100      // number of chars for JSON string
 
-// TODO: this bit right here, 
 #ifndef PICO_MQTT_SERVER
-#error Need to define PICO_MQTT_SERVER
+#error Required to define PICO_MQTT_SERVER
 #endif
 
+#ifndef PICO_MQTT_USER 
+#error Required to define PICO_MQTT_USER 
+#endif
+
+#ifndef PICO_MQTT_PASS 
+#error Required to define PICO_MQTT_PASS 
+#endif
+
+#ifndef PICO_WIFI_SSID 
+#error Required to define PICO_WIFI_SSID 
+#endif
+
+#ifndef PICO_WIFI_PASS 
+#error Required to define PICO_WIFI_PASS
+#endif
+
+#ifndef PICO_SENSOR_ID 
+#error Required to define PICO_SENSOR_ID 
+#endif
 
 // ---------------------------------------------------------------------------
 // GLOBAL VARS 
@@ -79,8 +94,15 @@ int Init_Network_Comms(){
   return 0;
 }
 
-//TODO: docstring
-
+/** This function converts to JSON and transmits a payload of sensor data (temperature, humidity,
+ * and light levels) via MQTT to the web application. The MQTT 'topic' is the
+ * sensor ID defined at build time, and the MQTT message is the JSON payload.
+ *
+ * @env   PICO_SENSOR_ID  Sends the sensor ID as the MQTT topic.
+ * @param Sensor_Data     Current sensor data to be transmitted.
+ *
+ * Returns 0 if successful or 1 if an error is encountered.
+ */
 int Publish_Data(const Payload_Data *Sensor_Data){
   
   #if DEBUG_MQTT
@@ -126,7 +148,15 @@ int Publish_Data(const Payload_Data *Sensor_Data){
 // PRIVATE FUNCTIONS
 // ---------------------------------------------------------------------------
 
-// TODO: docstring
+/**
+ * Converts the sensor data into a JSON payload to be transmitted via MQTT to
+ * the web application.
+ *
+ * @parm    Sensor_Data   The data to be converted into a JSON string
+ * @param   json_payload  The JSON string is stored here for callign function.
+ *
+ * Returns 0 if successful or 1 if an error occurs.
+ */
 int generate_payload(const Payload_Data *Sensor_Data, char json_payload[]){
 
   if (Sensor_Data->DHT20_Data_Valid){
@@ -192,7 +222,6 @@ int init_mqtt(){
   printf("MQTT Server is: %s\n", PICO_MQTT_SERVER);
   #endif
 
-  // TODO: add error checking here
   mqtt_client = mqtt_client_new();
   
   // set client connection parameters
@@ -200,11 +229,6 @@ int init_mqtt(){
   client_info.client_user = PICO_MQTT_USER;
   client_info.client_pass = PICO_MQTT_PASS;
   client_info.keep_alive = MQTT_KEEP_ALIVE;
-  //client_info.will_topic;   // TODO: implement last will
-  //client_info.will_msg;
-  //client_info.will_qos;
-  //client_info.will_retain;
-  //client_info.tls_config = NULL; // altcp_tls_create_config_client(NULL, 0);
 
   // convert IP address from a string before passing through to the mqtt connect call
   ip_addr_t server_ip;
