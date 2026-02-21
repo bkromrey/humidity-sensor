@@ -55,7 +55,6 @@ void ui_lcd_init(void) {
 
     lcd_i2c_init(&g_lcd, LCD_I2C_PORT, LCD_I2C_ADDR, 16, 2);
     lcd_create_char(&g_lcd,1, degree_symbol);
-    ui_show_loading();
 }
 
 /**

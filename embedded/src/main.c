@@ -36,6 +36,7 @@ bool system_timer_callback(struct repeating_timer *);
 void Clear_Button_Flags(void);
 bool ADC_New(void);
 bool DHT20_New(void);
+uint32_t Get_Errors(void);
 
 // ********** State Machine **********
 
@@ -47,6 +48,7 @@ typedef enum
   Normal_F,
   Normal_C,
   Photores,
+  Error,
 } State;
 
 // Function Prototypes
@@ -55,6 +57,7 @@ State Loading_State(void);
 State Normal_F_State(void);
 State Normal_C_State(void);
 State Photores_State(void);
+State Error_State(void);
 
 typedef State (*stateHandler)(void); // function pointer
 
@@ -63,7 +66,9 @@ stateHandler StateTable[] = {
     Loading_State,
     Normal_F_State,
     Normal_C_State,
-    Photores_State};
+    Photores_State,
+    Error_State,
+  };
 
 State Get_Corresponding_Screen(State *screens);
 
@@ -148,6 +153,9 @@ State Loading_State(void)
   while (!Data_Ready_Flag) // Spin until a packet is received
     Refresh_Data();
 
+  if (Get_Errors()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   Force_Render_Flag = true;
   return Normal_F;
 }
@@ -174,6 +182,9 @@ State Normal_F_State(void)
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
   }
+
+  if (Get_Errors()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
 
   // [0] - default
   // [1] - button 0
@@ -214,6 +225,9 @@ State Normal_C_State(void)
     Force_Render_Flag = false;
   }
 
+  if (Get_Errors()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   // [0] - default
   // [1] - button 0
   // [2] - button 1
@@ -253,6 +267,9 @@ State Photores_State(void)
     Force_Render_Flag = false;
   }
 
+  if (Get_Errors()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   // [0] - default
   // [1] - button 0
   // [2] - button 1
@@ -270,6 +287,11 @@ State Photores_State(void)
     Force_Render_Flag = true; // allow next state to render on entry
 
   return return_val;
+}
+
+/*********** Error_State **********/
+State Error_State(void){
+
 }
 
 /**
@@ -383,4 +405,9 @@ bool DHT20_New(void){
   if (hum_new != hum_old || temp_c_new != temp_c_old || temp_f_new != temp_f_old)
       return true;
   return false;
+}
+
+// returns a bitmask of the errors current present
+uint32_t Get_Errors(void){
+
 }
