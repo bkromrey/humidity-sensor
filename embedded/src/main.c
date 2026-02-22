@@ -303,11 +303,11 @@ State Error_State(void){
   if (enter){
     enter = false;
     add_repeating_timer_ms(ERROR_BLINK, error_timer_callback, NULL, &timer); // blink all the leds
+    ui_show_error(NULL, NULL);
   }
-    
-  ui_show_error(NULL, NULL);
   
   Refresh_Data();
+  
   if(Get_Error()){
     return Error;
   } else { // time to leave the state
@@ -421,6 +421,9 @@ void Clear_Button_Flags(void)
   }
 }
 
+/**
+ * Checks if the photoresistor data is new; this is used to not refresh the screen with old data
+ */
 bool ADC_New(void){
   if(Sensor_Data_Copy.ADC_Data != Sensor_Data_Copy_Old.ADC_Data)
     return true;
