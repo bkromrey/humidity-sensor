@@ -339,6 +339,10 @@ bool system_timer_callback(struct repeating_timer *t)
   return true;
 }
 
+/**
+ * System timer callback for error state led_array blinking
+ * Will blink all LEDs using an exclusive or bitwise operation
+ */
 bool error_timer_callback(struct repeating_timer *t){
   static uint32_t led_mask = 0;
   led_mask ^= (LED_LENGTH + 1);
@@ -423,6 +427,9 @@ bool ADC_New(void){
   return false;
 }
 
+/**
+ * Checks if the DHT20 data is new; this is used to not refresh the screen with old data
+ */
 bool DHT20_New(void){
   uint32_t hum_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.humidity * 10);
   uint32_t hum_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.humidity * 10);
@@ -438,7 +445,9 @@ bool DHT20_New(void){
   return false;
 }
 
-// returns a bitmask of the errors current present
+/**
+ * Returns true if either the ADC is out of bounds set in config.h or if the DHT20 data is not valid
+ */
 bool Get_Error(void){
   bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
   return adc_bounds_check || (Sensor_Data_Copy.DHT20_Data_Valid == 0) ;
