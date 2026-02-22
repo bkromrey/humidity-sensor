@@ -66,7 +66,7 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 #define PHOTORESISTOR_ADC 26
 
 #define ADC_MAX 4000
-#define ADC_MIN 40
+#define ADC_MIN 50
 
 #define PHOTORES_GPIO_PIN 26
 

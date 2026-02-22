@@ -297,8 +297,9 @@ State Photores_State(void)
 
 /*********** Error_State **********/
 State Error_State(void){
-  void ui_show_error();
+  ui_show_error(NULL, NULL);
   
+  Refresh_Data();
   if(Get_Error()){
     return Error;
   } else {
@@ -423,5 +424,5 @@ bool DHT20_New(void){
 // returns a bitmask of the errors current present
 bool Get_Error(void){
   bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
-  return adc_bounds_check || Sensor_Data_Copy.DHT20_Data_Valid;
+  return adc_bounds_check || (Sensor_Data_Copy.DHT20_Data_Valid == 0) ;
 }
