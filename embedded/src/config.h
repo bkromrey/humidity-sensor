@@ -73,4 +73,7 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 // Scaling Factors
 #define HUMIDITY_MAX 100
 
+// Error state
+#define ERROR_BLINK 2000 // ms
+
 #endif // CONFIG_H

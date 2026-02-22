@@ -37,6 +37,7 @@ void Clear_Button_Flags(void);
 bool ADC_New(void);
 bool DHT20_New(void);
 bool Get_Error(void);
+bool error_timer_callback(struct repeating_timer *);
 
 // ********** State Machine **********
 
@@ -297,12 +298,21 @@ State Photores_State(void)
 
 /*********** Error_State **********/
 State Error_State(void){
+  static bool enter = true;
+  static struct repeating_timer timer;
+  if (enter){
+    enter = false;
+    add_repeating_timer_ms(ERROR_BLINK, error_timer_callback, NULL, &timer); // blink all the leds
+  }
+    
   ui_show_error(NULL, NULL);
   
   Refresh_Data();
   if(Get_Error()){
     return Error;
-  } else {
+  } else { // time to leave the state
+    enter = true; // reset the entry bool
+    cancel_repeating_timer(&timer);
     Clear_Button_Flags(); // clear any flags that may have been set during this state
     return Normal_F;
   }
@@ -326,6 +336,13 @@ bool system_timer_callback(struct repeating_timer *t)
   }
 
   restore_interrupts(status);
+  return true;
+}
+
+bool error_timer_callback(struct repeating_timer *t){
+  static uint32_t led_mask = 0;
+  led_mask ^= (LED_LENGTH + 1);
+  Display_LED_Array(led_mask);
   return true;
 }
 
@@ -426,3 +443,4 @@ bool Get_Error(void){
   bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
   return adc_bounds_check || (Sensor_Data_Copy.DHT20_Data_Valid == 0) ;
 }
+
