@@ -36,7 +36,7 @@ bool system_timer_callback(struct repeating_timer *);
 void Clear_Button_Flags(void);
 bool ADC_New(void);
 bool DHT20_New(void);
-uint32_t Get_Errors(void);
+bool Get_Error(void);
 
 // ********** State Machine **********
 
@@ -136,6 +136,8 @@ State Init_State(void)
       printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   #endif
   }
+  sleep_ms(2000);
+  printf("here?");
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
 
@@ -150,10 +152,12 @@ State Loading_State(void)
     sleep_ms(2000);
   #endif
 
-  while (!Data_Ready_Flag) // Spin until a packet is received
+  while (!Data_Ready_Flag){ // Spin until a packet is received
+    printf("are we stuck here?");
     Refresh_Data();
+  }
 
-  if (Get_Errors()) // if we have errors
+  if (Get_Error()) // if we have errors
     return Error; // Hijack the flow and jump to error state
 
   Force_Render_Flag = true;
@@ -168,6 +172,8 @@ State Normal_F_State(void)
     sleep_ms(2000);
   #endif
   Refresh_Data();
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
 
   if ((Data_Ready_Flag && DHT20_New()) || Force_Render_Flag)
   {
@@ -182,9 +188,6 @@ State Normal_F_State(void)
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
   }
-
-  if (Get_Errors()) // if we have errors
-    return Error; // Hijack the flow and jump to error state
 
   // [0] - default
   // [1] - button 0
@@ -214,6 +217,9 @@ State Normal_C_State(void)
   #endif
   Refresh_Data();
 
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   if ((Data_Ready_Flag && DHT20_New())|| Force_Render_Flag)
   {
     // Display LCD Data
@@ -224,9 +230,6 @@ State Normal_C_State(void)
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
   }
-
-  if (Get_Errors()) // if we have errors
-    return Error; // Hijack the flow and jump to error state
 
   // [0] - default
   // [1] - button 0
@@ -256,6 +259,9 @@ State Photores_State(void)
   #endif
   Refresh_Data();
 
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   if ((Data_Ready_Flag && ADC_New()) || Force_Render_Flag)
   {
     // Display LCD Data
@@ -267,7 +273,7 @@ State Photores_State(void)
     Force_Render_Flag = false;
   }
 
-  if (Get_Errors()) // if we have errors
+  if (Get_Error()) // if we have errors
     return Error; // Hijack the flow and jump to error state
 
   // [0] - default
@@ -291,7 +297,14 @@ State Photores_State(void)
 
 /*********** Error_State **********/
 State Error_State(void){
-
+  void ui_show_error();
+  
+  if(Get_Error()){
+    return Error;
+  } else {
+    Clear_Button_Flags(); // clear any flags that may have been set during this state
+    return Normal_F;
+  }
 }
 
 /**
@@ -408,6 +421,7 @@ bool DHT20_New(void){
 }
 
 // returns a bitmask of the errors current present
-uint32_t Get_Errors(void){
-
+bool Get_Error(void){
+  bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
+  return adc_bounds_check || Sensor_Data_Copy.DHT20_Data_Valid;
 }
