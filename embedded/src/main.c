@@ -303,11 +303,11 @@ State Error_State(void){
   if (enter){
     enter = false;
     add_repeating_timer_ms(ERROR_BLINK, error_timer_callback, NULL, &timer); // blink all the leds
-    ui_show_error(NULL, NULL);
   }
-  
+
+  ui_show_error(NULL, NULL);
   Refresh_Data();
-  
+
   if(Get_Error()){
     return Error;
   } else { // time to leave the state
