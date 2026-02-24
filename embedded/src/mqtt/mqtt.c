@@ -80,6 +80,8 @@ int Init_Network_Comms(){
   init_mqtt();
 
   // blocking - wait for the callback function to update status before continuing
+  // the connection has a timeout of 60 seconds (or as MQTT_CONNECT_TIMOUT is
+  // defined in lwipopts.h)
   while (connected_to_broker == NOT_YET_INITIALIZED)
     sleep_ms(10);
   
@@ -94,9 +96,13 @@ int Init_Network_Comms(){
   return 0;
 }
 
-/** This function converts to JSON and transmits a payload of sensor data (temperature, humidity,
- * and light levels) via MQTT to the web application. The MQTT 'topic' is the
- * sensor ID defined at build time, and the MQTT message is the JSON payload.
+/** This function converts to JSON and transmits a payload of sensor data 
+ * (temperature, humidity, and light levels) via MQTT to the web application. 
+ * The MQTT 'topic' is the sensor ID defined at build time, and the MQTT 
+ * message is the JSON payload.
+ *
+ * If the Pico is no longer connected to the MQTT broker, will attempt to
+ * reconnect, so that the next time this function is called, it might succeed.
  *
  * @env   PICO_SENSOR_ID  Sends the sensor ID as the MQTT topic.
  * @param Sensor_Data     Current sensor data to be transmitted.
@@ -126,7 +132,9 @@ int Publish_Data(const Payload_Data *Sensor_Data){
     #if DEBUG_MQTT
     printf("ERROR SENDING DATA: MQTT client no longer connected\n");
     #endif
-
+    
+    init_mqtt();
+  
     return 1;
   }
  
@@ -222,13 +230,18 @@ int init_mqtt(){
   printf("MQTT Server is: %s\n", PICO_MQTT_SERVER);
   #endif
 
-  mqtt_client = mqtt_client_new();
+  // if this is the first time this connection is attempted, init required vars
+  if (connected_to_broker == NOT_YET_INITIALIZED){
+
+    mqtt_client = mqtt_client_new();
   
-  // set client connection parameters
-  client_info.client_id = PICO_SENSOR_ID;
-  client_info.client_user = PICO_MQTT_USER;
-  client_info.client_pass = PICO_MQTT_PASS;
-  client_info.keep_alive = MQTT_KEEP_ALIVE;
+    // set client connection parameters
+    client_info.client_id = PICO_SENSOR_ID;
+    client_info.client_user = PICO_MQTT_USER;
+    client_info.client_pass = PICO_MQTT_PASS;
+    client_info.keep_alive = MQTT_KEEP_ALIVE;
+
+  }
 
   // convert IP address from a string before passing through to the mqtt connect call
   ip_addr_t server_ip;
