@@ -2,7 +2,7 @@
 
 #define DEBUG_MQTT 1
 
-#define WIFI_TIMEOUT 120000       // how many ms to wait before failing to connect
+#define WIFI_TIMEOUT 30000       // how many ms to wait before failing to connect (30s)
 #define PICO_MQTT_PORT 1883       // 1883 is the standard MQTT port
 #define MQTT_KEEP_ALIVE 60        // keepalive in seconds
 #define MQTT_QOS 0
@@ -40,6 +40,13 @@
 static mqtt_client_t *mqtt_client;
 static struct mqtt_connect_client_info_t client_info;
 
+enum wireless_connectivity{
+  WIFI_NOT_INIT,
+  WIFI_CONNECTED,
+  WIFI_DISCONNECTED,
+  WIFI_DISABLED
+} wireless_connectivity = WIFI_NOT_INIT;
+
 enum connected_to_broker{
   NOT_YET_INITIALIZED,
   CONNECTED,
@@ -69,12 +76,17 @@ enum connected_to_broker{
  */
 int Init_Network_Comms(){
 
-  // initialize & connect to wifi - this must be done before getting MAC address 
+
+
+  // initialize & connect to wifi
   if (init_wifi()){
     #if DEBUG_MQTT
-    printf("Error initializing & connecting to wifi network\n");
+    printf("Error initializing & connecting to wifi network; wireless communications disabled.\n");
     #endif
-  }
+    wireless_connectivity = WIFI_DISABLED;
+    return 1;
+  } else
+    wireless_connectivity = WIFI_CONNECTED;
 
   // initialize connection to the MQTT broker
   init_mqtt();
@@ -111,9 +123,8 @@ int Init_Network_Comms(){
  */
 int Publish_Data(const Payload_Data *Sensor_Data){
   
-  #if DEBUG_MQTT
-  printf("publishing data using topic %s\n", PICO_SENSOR_ID);
-  #endif
+  if (wireless_connectivity == WIFI_DISABLED)
+    return 1;
 
   char data_as_json[MAX_PAYLOAD_SIZE];
   if (generate_payload(Sensor_Data, data_as_json)){
@@ -127,6 +138,17 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   printf("%s\n\n", data_as_json);
   #endif
 
+  // validate wifi connection
+  if (cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != 1){
+    #if DEBUG_MQTT
+    printf("ERROR SENDING DATA: Not connected to wifi network!\n");
+    #endif
+
+    wireless_connectivity = WIFI_DISCONNECTED;
+
+    return 1;
+  }
+
   //ensure still connected to mqtt broker before attempting to send
   if (mqtt_client_is_connected(mqtt_client) == 0){
     #if DEBUG_MQTT
@@ -137,7 +159,11 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   
     return 1;
   }
- 
+
+  #if DEBUG_MQTT
+  printf("publishing data using topic %s\n", PICO_SENSOR_ID);
+  #endif
+  
   // publish the data to mqtt broker
   if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
     return 1;
@@ -226,10 +252,6 @@ int init_wifi(){
  */
 int init_mqtt(){
   
-  #if DEBUG_MQTT
-  printf("MQTT Server is: %s\n", PICO_MQTT_SERVER);
-  #endif
-
   // if this is the first time this connection is attempted, init required vars
   if (connected_to_broker == NOT_YET_INITIALIZED){
 
@@ -240,8 +262,11 @@ int init_mqtt(){
     client_info.client_user = PICO_MQTT_USER;
     client_info.client_pass = PICO_MQTT_PASS;
     client_info.keep_alive = MQTT_KEEP_ALIVE;
-
   }
+
+  #if DEBUG_MQTT
+  printf("MQTT Server is: %s\n", PICO_MQTT_SERVER);
+  #endif
 
   // convert IP address from a string before passing through to the mqtt connect call
   ip_addr_t server_ip;
