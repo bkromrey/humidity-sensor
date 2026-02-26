@@ -112,3 +112,62 @@ API server for the Humidity Sensor project.
 
 cd web/backend
 npm install
+
+### Backend environment variables
+
+```sh
+cd web/backend
+cp .env.example .env
+```
+
+### Backend run
+
+```sh
+cd web/backend
+npm run dev
+```
+
+Edit `web/backend/.env` and set these values:
+
+* `PORT`
+* `MONGODB_URI`
+* `MONGODB_DB_NAME`
+* `MQTT_URL`
+* `MQTT_USERNAME`
+* `MQTT_PASSWORD`
+* `MQTT_CLIENT_ID`
+* `HISTORY_INTERVAL_MINUTES`
+* `BACKEND_TIMEZONE`
+
+### MQTT topic and payload contract
+
+Backend subscribes to both topic styles:
+
+* `sensors/<sensor_id>/raw`
+* `<sensor_id>`
+
+Expected JSON payload example:
+
+```json
+{
+  "temperature_f": "72.5",
+  "temperature_c": "22.5",
+  "humidity": "45.3",
+  "light": "621",
+  "ts": "2026-02-26T21:25:00Z"
+}
+```
+
+### Data model behavior
+
+* `sensor_latest`: updated for every incoming MQTT message.
+* `sensor_history`: stores snapshots no more than once every 30 minutes per sensor.
+* All source-of-truth timestamps are UTC in DB; backend also attaches local time based on `BACKEND_TIMEZONE`.
+
+### API and realtime endpoints
+
+* `GET /health`
+* `GET /api/sensors/latest`
+* `GET /api/sensors/:sensorId/history?from=<iso>&to=<iso>`
+* `GET /latest` (backward-compatible current frontend endpoint)
+* `WS /ws/sensors` (pushes latest sensor events in realtime)
