@@ -90,7 +90,7 @@ web/**/.vite/
 web/**/.cache/
 
 .env
-.env.*
+
 !web/backend/.env.example
 *.log
 
