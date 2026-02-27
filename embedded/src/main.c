@@ -21,6 +21,7 @@
 #include "core1/core1.h"
 #include "ui/lcd_screens.h"
 #include "ui/led_ui.h"
+#include "mqtt/mqtt.h"
 
 // Global Button Array
 Button Button_Array[NUM_BUTTONS] = {
@@ -137,8 +138,16 @@ State Init_State(void)
       printf("ERROR INITIALIZING DHT20 SENSOR\r\n");
   #endif
   }
-  sleep_ms(2000);
-  printf("here?");
+
+  // Initialize Wifi Communications Via MQTT
+  if (Init_Network_Comms()){
+    // TODO: error handling here
+    #if DEBUG
+    printf("ERROR INITIALIZING WIRELESS COMMUNICATIONS\r\n");
+    #endif
+  };
+
+
   // Launch Core 1
   multicore_launch_core1(Core_1_Entry);
 
@@ -185,6 +194,8 @@ State Normal_F_State(void)
     ui_show_dht20_f((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    // Send Data to Web App Via MQTT
+    Publish_Data((const Payload_Data *)&Sensor_Data_Copy);
     Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
@@ -227,6 +238,8 @@ State Normal_C_State(void)
     ui_show_dht20_c((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    // Send Data to Web App Via MQTT
+    Publish_Data((const Payload_Data *)&Sensor_Data_Copy);
     Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
@@ -269,6 +282,10 @@ State Photores_State(void)
     ui_show_photores((const Payload_Data *)&Sensor_Data_Copy);
     // Display LED Data
     Display_Humidity_LED(Sensor_Data_Copy.DHT20_Data.humidity);
+    
+    // Send Data to Web App Via MQTT
+    Publish_Data((const Payload_Data *)&Sensor_Data_Copy);
+
     Sensor_Data_Copy_Old = Sensor_Data_Copy;
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
