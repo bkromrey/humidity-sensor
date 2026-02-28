@@ -5,6 +5,7 @@ export type DeviceReading = {
   name: string;
   status: DeviceStatus;
   updatedAt: string;
+  updatedAtFull: string;
   temperatureC: number;
   temperatureF: number;
   humidity: number;

@@ -49,7 +49,7 @@ export function DeviceSidebar({ devices, selectedId, onSelect, temperatureUnit }
             className={`${CARD_CLASS} ${selected ? SELECTED_CARD_CLASS : INACTIVE_CARD_CLASS}`}
           >
             <h2 className={DEVICE_NAME_CLASS}>{device.name}</h2>
-            <p className={UPDATED_CLASS}>Updated {device.updatedAt}</p>
+            <p className={UPDATED_CLASS}>Updated: {device.updatedAtFull}</p>
 
             <div className={METRICS_GRID_CLASS}>
               <div className={TEMP_CELL_CLASS}>

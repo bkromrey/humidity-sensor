@@ -56,6 +56,18 @@ function toTimeLabel(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function toDateLabel(timestamp: number): string {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+function toDateTimeLabel(timestamp: number): string {
+  return `${toDateLabel(timestamp)}, ${toTimeLabel(timestamp)}`;
+}
+
 function toDeviceReading(item: ApiLatestDevice): DeviceReading {
   const parsed = item.receivedAtUtc ? Date.parse(item.receivedAtUtc) : item.ts ?? Date.now();
   const ts = Number.isFinite(parsed) ? parsed : Date.now();
@@ -64,6 +76,7 @@ function toDeviceReading(item: ApiLatestDevice): DeviceReading {
     name: item.sensorId,
     status: Date.now() - ts <= ONLINE_WINDOW_MS ? 'online' : 'offline',
     updatedAt: toTimeLabel(ts),
+    updatedAtFull: toDateTimeLabel(ts),
     temperatureC: asNumber(item.temperatureC),
     temperatureF: asNumber(item.temperatureF),
     humidity: asNumber(item.humidity),
@@ -75,7 +88,7 @@ function toWeeklyPoint(item: ApiHistoryPoint): WeeklyPoint {
   const parsed = item.receivedAtUtc ? Date.parse(item.receivedAtUtc) : item.ts ?? Date.now();
   const ts = Number.isFinite(parsed) ? parsed : Date.now();
   return {
-    label: new Date(ts).toLocaleDateString([], { weekday: 'short' }),
+    label: toDateLabel(ts),
     temperatureC: asNumber(item.temperatureC),
     temperatureF: asNumber(item.temperatureF),
     humidity: asNumber(item.humidity),

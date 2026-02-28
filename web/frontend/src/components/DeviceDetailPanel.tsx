@@ -45,7 +45,7 @@ export function DeviceDetailPanel({
     <article className={PANEL_CLASS}>
       <div className={PANEL_HEADER_CLASS}>
         <h2 className={DEVICE_NAME_CLASS}>{device.name}</h2>
-        <p className={DEVICE_META_CLASS}>Pico • Updated {device.updatedAt}</p>
+        <p className={DEVICE_META_CLASS}>Updated: {device.updatedAtFull}</p>
       </div>
 
       <div className={PANEL_BODY_CLASS}>
