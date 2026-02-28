@@ -37,6 +37,8 @@ bool system_timer_callback(struct repeating_timer *);
 void Clear_Button_Flags(void);
 bool ADC_New(void);
 bool DHT20_New(void);
+bool Get_Error(void);
+bool error_timer_callback(struct repeating_timer *);
 
 // ********** State Machine **********
 
@@ -48,6 +50,7 @@ typedef enum
   Normal_F,
   Normal_C,
   Photores,
+  Error,
 } State;
 
 // Function Prototypes
@@ -56,6 +59,7 @@ State Loading_State(void);
 State Normal_F_State(void);
 State Normal_C_State(void);
 State Photores_State(void);
+State Error_State(void);
 
 typedef State (*stateHandler)(void); // function pointer
 
@@ -64,7 +68,9 @@ stateHandler StateTable[] = {
     Loading_State,
     Normal_F_State,
     Normal_C_State,
-    Photores_State};
+    Photores_State,
+    Error_State,
+  };
 
 State Get_Corresponding_Screen(State *screens);
 
@@ -156,8 +162,13 @@ State Loading_State(void)
     sleep_ms(2000);
   #endif
 
-  while (!Data_Ready_Flag) // Spin until a packet is received
+  while (!Data_Ready_Flag){ // Spin until a packet is received
+    printf("are we stuck here?");
     Refresh_Data();
+  }
+
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
 
   Force_Render_Flag = true;
   return Normal_F;
@@ -171,6 +182,8 @@ State Normal_F_State(void)
     sleep_ms(2000);
   #endif
   Refresh_Data();
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
 
   if ((Data_Ready_Flag && DHT20_New()) || Force_Render_Flag)
   {
@@ -216,6 +229,9 @@ State Normal_C_State(void)
   #endif
   Refresh_Data();
 
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   if ((Data_Ready_Flag && DHT20_New())|| Force_Render_Flag)
   {
     // Display LCD Data
@@ -257,6 +273,9 @@ State Photores_State(void)
   #endif
   Refresh_Data();
 
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
+
   if ((Data_Ready_Flag && ADC_New()) || Force_Render_Flag)
   {
     // Display LCD Data
@@ -271,6 +290,9 @@ State Photores_State(void)
     Data_Ready_Flag = false;
     Force_Render_Flag = false;
   }
+
+  if (Get_Error()) // if we have errors
+    return Error; // Hijack the flow and jump to error state
 
   // [0] - default
   // [1] - button 0
@@ -291,6 +313,28 @@ State Photores_State(void)
   return return_val;
 }
 
+/*********** Error_State **********/
+State Error_State(void){
+  static bool enter = true;
+  static struct repeating_timer timer;
+  if (enter){
+    enter = false;
+    add_repeating_timer_ms(ERROR_BLINK, error_timer_callback, NULL, &timer); // blink all the leds
+    ui_show_error(NULL, NULL);
+  }
+
+  Refresh_Data();
+  
+  if(Get_Error()){
+    return Error;
+  } else { // time to leave the state
+    enter = true; // reset the entry bool
+    cancel_repeating_timer(&timer);
+    Clear_Button_Flags(); // clear any flags that may have been set during this state
+    return Normal_F;
+  }
+}
+
 /**
  * System timer callback for button debouncing
  * Loops through the global button array and will decrement the button's disabled counter if it is greater than zero
@@ -309,6 +353,17 @@ bool system_timer_callback(struct repeating_timer *t)
   }
 
   restore_interrupts(status);
+  return true;
+}
+
+/**
+ * System timer callback for error state led_array blinking
+ * Will blink all LEDs using an exclusive or bitwise operation
+ */
+bool error_timer_callback(struct repeating_timer *t){
+  static uint32_t led_mask = 0;
+  led_mask ^= (LED_LENGTH + 1);
+  Display_LED_Array(led_mask);
   return true;
 }
 
@@ -383,12 +438,18 @@ void Clear_Button_Flags(void)
   }
 }
 
+/**
+ * Checks if the photoresistor data is new; this is used to not refresh the screen with old data
+ */
 bool ADC_New(void){
   if(Sensor_Data_Copy.ADC_Data != Sensor_Data_Copy_Old.ADC_Data)
     return true;
   return false;
 }
 
+/**
+ * Checks if the DHT20 data is new; this is used to not refresh the screen with old data
+ */
 bool DHT20_New(void){
   uint32_t hum_new = (uint32_t)(Sensor_Data_Copy.DHT20_Data.humidity * 10);
   uint32_t hum_old = (uint32_t)(Sensor_Data_Copy_Old.DHT20_Data.humidity * 10);
@@ -403,3 +464,12 @@ bool DHT20_New(void){
       return true;
   return false;
 }
+
+/**
+ * Returns true if either the ADC is out of bounds set in config.h or if the DHT20 data is not valid
+ */
+bool Get_Error(void){
+  bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
+  return adc_bounds_check || (Sensor_Data_Copy.DHT20_Data_Valid == 0) ;
+}
+

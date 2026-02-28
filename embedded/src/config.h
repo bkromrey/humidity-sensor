@@ -13,10 +13,6 @@
 // System Interrupt Speed
 #define SYS_TIMER 20 // ms
 
-// ADC Conversion
-#define ADC_MAX 3200
-#define ADC_MIN 100
-
 // Buttons
 #define BUTTON_DEBOUNCE 1 // 20 ms
 #define NUM_BUTTONS 3
@@ -69,12 +65,15 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 // ===== ADC =====
 #define PHOTORESISTOR_ADC 26
 
-#define ADC_MAX 3200
-#define ADC_MIN 100
+#define ADC_MAX 4000
+#define ADC_MIN 50
 
 #define PHOTORES_GPIO_PIN 26
 
 // Scaling Factors
 #define HUMIDITY_MAX 100
+
+// Error state
+#define ERROR_BLINK 2000 // ms
 
 #endif // CONFIG_H
