@@ -100,7 +100,6 @@ State Init_State(void)
   ui_show_loading();
 
   // all code below added just for testing screens - will be removed later
-  sleep_ms(2000);
   // ui_show_dht20_f(NULL);
   // sleep_ms(2000);
   // ui_show_dht20_c(NULL);
@@ -163,7 +162,6 @@ State Loading_State(void)
   #endif
 
   while (!Data_Ready_Flag){ // Spin until a packet is received
-    printf("are we stuck here?");
     Refresh_Data();
   }
 
@@ -269,6 +267,7 @@ State Photores_State(void)
 {
   #if DEBUG
     printf("Current State is: Photores\r\n");
+    printf("%f\r\n",Sensor_Data_Copy.ADC_Data);
     sleep_ms(2000);
   #endif
   Refresh_Data();
@@ -315,6 +314,11 @@ State Photores_State(void)
 
 /*********** Error_State **********/
 State Error_State(void){
+  #if DEBUG
+    printf("Current State is: Error\r\n");
+    printf("ADC Data: %f\n",Sensor_Data_Copy.ADC_Data);
+    sleep_ms(2000);
+  #endif
   static bool enter = true;
   static struct repeating_timer timer;
   if (enter){
@@ -469,7 +473,7 @@ bool DHT20_New(void){
  * Returns true if either the ADC is out of bounds set in config.h or if the DHT20 data is not valid
  */
 bool Get_Error(void){
-  bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= ADC_MAX || Sensor_Data_Copy.ADC_Data <= ADC_MIN; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
+  bool adc_bounds_check = Sensor_Data_Copy.ADC_Data >= 100.0f || Sensor_Data_Copy.ADC_Data <= 0.0f; // if the sensore data is greater or equal to max or less than or equal to min, ie this is out of bounds
   return adc_bounds_check || (Sensor_Data_Copy.DHT20_Data_Valid == 0) ;
 }
 

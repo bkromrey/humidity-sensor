@@ -41,7 +41,9 @@ void Produce_Data(void){
     data->DHT20_Data_Valid = dht20_valid;
   
     // Take Measurement from photoresistor
-    data->ADC_Data = Get_Photo_Resistor_Data(PHOTORES_GPIO_PIN);
+    uint16_t adc_raw;
+    adc_raw = Get_Photoresistor_Data(PHOTORES_GPIO_PIN);
+    data->ADC_Data = Convert_Photoresistor_Percent(adc_raw);
   
     // Logic Checking Here
 

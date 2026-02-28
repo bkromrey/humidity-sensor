@@ -119,7 +119,7 @@ void ui_show_photores(const Payload_Data *p) {
         snprintf(l2, sizeof(l2), "ADC: ----");
     } else {
         snprintf(l1, sizeof(l1), "Light");
-        snprintf(l2, sizeof(l2), "ADC: %4u", (unsigned)p->ADC_Data);
+        snprintf(l2, sizeof(l2), "ADC: %5.1f%%", p->ADC_Data);
     }
 
     write_2lines(l1, l2);

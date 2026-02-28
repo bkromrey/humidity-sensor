@@ -64,6 +64,9 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 
 // ===== ADC =====
 #define PHOTORESISTOR_ADC 26
+#define ADC_PIN_MAX 29
+#define ADC_PIN_MIN 26
+#define ADC_PIN_OFFSET 26 // pins 26 - 29 are ADC pins on the pico
 
 #define ADC_MAX 4000
 #define ADC_MIN 50
