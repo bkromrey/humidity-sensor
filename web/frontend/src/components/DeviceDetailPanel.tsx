@@ -1,8 +1,8 @@
 import { SegmentedControl } from './SegmentedControl';
 import { MetricCard } from './MetricCard';
 import { WeeklyChart } from './WeeklyChart';
-import type { DetailMode, DeviceReading, WeeklyPoint } from '../types/monitoring';
-import { resistanceToLux, toFahrenheit } from '../utils/sensorMath';
+import type { DetailMode, DeviceReading, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   DETAIL_MODE_ITEM_CLASS,
   DEVICE_META_CLASS,
@@ -23,6 +23,8 @@ type DeviceDetailPanelProps = {
   weeklyData: WeeklyPoint[];
   // change detail mode from segmented control
   onViewModeChange: (mode: DetailMode) => void;
+  // selected global temperature unit
+  temperatureUnit: TemperatureUnit;
 };
 
 const DETAIL_MODE_OPTIONS: { value: DetailMode; label: string }[] = [
@@ -35,9 +37,9 @@ export function DeviceDetailPanel({
   viewMode,
   weeklyData,
   onViewModeChange,
+  temperatureUnit,
 }: DeviceDetailPanelProps) {
-  // convert device sensor value to lux
-  const selectedLux = resistanceToLux(device.photoResistorOhm);
+  const temperature = temperatureByUnit(device.temperatureC, device.temperatureF, temperatureUnit);
 
   return (
     <article className={PANEL_CLASS}>
@@ -61,8 +63,8 @@ export function DeviceDetailPanel({
           <div className={METRIC_GRID_CLASS}>
             <MetricCard
               variant="temp"
-              value={`${device.temperatureC.toFixed(1)} °C`}
-              subValue={`${toFahrenheit(device.temperatureC).toFixed(1)} °F`}
+              value={`${temperature.toFixed(1)} ${temperatureUnitSymbol(temperatureUnit)}`}
+              subValue="Ambient reading"
               label="Temperature"
             />
             <MetricCard
@@ -73,14 +75,14 @@ export function DeviceDetailPanel({
             />
             <MetricCard
               variant="light"
-              value={`${selectedLux} lx`}
-              subValue={`${device.photoResistorOhm} ohm`}
+              value={`${device.lightPercent}%`}
+              subValue="Ambient brightness"
               label="Light"
             />
           </div>
         ) : (
           // week trend chart
-          <WeeklyChart data={weeklyData} />
+          <WeeklyChart data={weeklyData} temperatureUnit={temperatureUnit} />
         )}
       </div>
     </article>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { SegmentedControl } from './SegmentedControl';
-import type { ChartMetric, WeeklyPoint } from '../types/monitoring';
+import type { ChartMetric, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   AXIS_LABEL_FONT_SIZE,
   AXIS_LABEL_FONT_WEIGHT,
@@ -18,23 +19,30 @@ import {
 
 type WeeklyChartProps = {
   data: WeeklyPoint[];
+  temperatureUnit: TemperatureUnit;
 };
 
-const metricConfig = {
-  temperatureC: { label: 'Temperature', color: '#f97316', unit: '°C', digits: 1 },
+const metricConfigBase = {
+  temperatureC: { label: 'Temperature', color: '#f97316', digits: 1 },
   humidity: { label: 'Humidity', color: '#3b82f6', unit: '%', digits: 0 },
-  lux: { label: 'Light', color: '#f59e0b', unit: 'lx', digits: 0 },
+  lightPercent: { label: 'Light', color: '#f59e0b', unit: '%', digits: 0 },
 } as const;
 
-export function WeeklyChart({ data }: WeeklyChartProps) {
+export function WeeklyChart({ data, temperatureUnit }: WeeklyChartProps) {
   const [selectedMetric, setSelectedMetric] = useState<ChartMetric>('temperatureC');
-  const prepared = useMemo(() => buildChartData(data, selectedMetric), [data, selectedMetric]);
+  const prepared = useMemo(
+    () => buildChartData(data, selectedMetric, temperatureUnit),
+    [data, selectedMetric, temperatureUnit]
+  );
 
   if (data.length === 0) {
     return <div className={EMPTY_STATE_CLASS}>No chart data yet.</div>;
   }
 
-  const activeMetric = metricConfig[selectedMetric];
+  const activeMetric =
+    selectedMetric === 'temperatureC'
+      ? { ...metricConfigBase.temperatureC, unit: temperatureUnitSymbol(temperatureUnit) }
+      : metricConfigBase[selectedMetric];
 
   return (
     <div className={CHART_WRAP_CLASS}>
@@ -107,7 +115,7 @@ export function WeeklyChart({ data }: WeeklyChartProps) {
   );
 }
 
-function buildChartData(data: WeeklyPoint[], metric: ChartMetric) {
+function buildChartData(data: WeeklyPoint[], metric: ChartMetric, temperatureUnit: TemperatureUnit) {
   // magick numbers for chart dimensions and padding - could be made dynamic if needed
   const width = 760;
   const height = 280;
@@ -117,7 +125,11 @@ function buildChartData(data: WeeklyPoint[], metric: ChartMetric) {
   const innerHeight = height - paddingY * 2;
   const xStep = data.length > 1 ? innerWidth / (data.length - 1) : 0;
 
-  const values = data.map((point) => point[metric]);
+  const values = data.map((point) =>
+    metric === 'temperatureC'
+      ? temperatureByUnit(point.temperatureC, point.temperatureF, temperatureUnit)
+      : point[metric]
+  );
   const min = Math.min(...values);
   const max = Math.max(...values);
   // prevent divide by zero if all values are same

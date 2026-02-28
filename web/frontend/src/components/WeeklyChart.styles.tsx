@@ -33,5 +33,5 @@ export const CHART_METRIC_OPTIONS: { value: ChartMetric; label: ReactNode }[] = 
       </>
     ),
   },
-  { value: 'lux', label: 'Light' },
+  { value: 'lightPercent', label: 'Light' },
 ];

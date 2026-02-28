@@ -1,5 +1,5 @@
-import type { DeviceReading } from '../types/monitoring';
-import { resistanceToLux } from '../utils/sensorMath';
+import type { DeviceReading, TemperatureUnit } from '../types/monitoring';
+import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   ASIDE_CLASS,
   CARD_CLASS,
@@ -24,6 +24,8 @@ type DeviceSidebarProps = {
   selectedId: string;
   // callback when user clicks a device card
   onSelect: (id: string) => void;
+  // selected global temperature unit
+  temperatureUnit: TemperatureUnit;
 };
 
 const MOBILE_TEMP_LABEL = 'Temp';
@@ -31,12 +33,11 @@ const MOBILE_HUMIDITY_LABEL = 'Hum';
 const DESKTOP_TEMP_LABEL = 'Temperature';
 const DESKTOP_HUMIDITY_LABEL = 'Humidity';
 
-export function DeviceSidebar({ devices, selectedId, onSelect }: DeviceSidebarProps) {
+export function DeviceSidebar({ devices, selectedId, onSelect, temperatureUnit }: DeviceSidebarProps) {
   return (
     <aside className={ASIDE_CLASS}>
       {devices.map((device) => {
-        // convert sensor value to lux for UI
-        const lux = resistanceToLux(device.photoResistorOhm);
+        const temperature = temperatureByUnit(device.temperatureC, device.temperatureF, temperatureUnit);
         const selected = selectedId === device.id;
 
         return (
@@ -56,8 +57,8 @@ export function DeviceSidebar({ devices, selectedId, onSelect }: DeviceSidebarPr
                   <ResponsiveMetricLabel mobileLabel={MOBILE_TEMP_LABEL} desktopLabel={DESKTOP_TEMP_LABEL} />
                 </p>
                 <p className={`${METRIC_VALUE_CLASS} text-[var(--temp)]`}>
-                  <span>{device.temperatureC.toFixed(1)}</span>
-                  <span>°C</span>
+                  <span>{temperature.toFixed(1)}</span>
+                  <span>{temperatureUnitSymbol(temperatureUnit)}</span>
                 </p>
               </div>
 
@@ -74,8 +75,8 @@ export function DeviceSidebar({ devices, selectedId, onSelect }: DeviceSidebarPr
               <div className={LIGHT_CELL_CLASS}>
                 <p className={METRIC_LABEL_CLASS}>Light</p>
                 <p className={`${METRIC_VALUE_CLASS} text-[var(--light)]`}>
-                  <span>{lux}</span>
-                  <span className={LIGHT_UNIT_CLASS}>lx</span>
+                  <span>{device.lightPercent}</span>
+                  <span className={LIGHT_UNIT_CLASS}>%</span>
                 </p>
               </div>
             </div>

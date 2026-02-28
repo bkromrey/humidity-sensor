@@ -17,4 +17,4 @@ export const METRIC_VALUE_CLASS =
   'mt-1 flex items-baseline justify-center gap-0.5 whitespace-nowrap text-[clamp(0.95rem,4vw,1.7rem)] font-semibold leading-none lg:text-[clamp(0.95rem,4.8vw,2rem)]';
 export const HUMIDITY_VALUE_CLASS =
   'mt-1 whitespace-nowrap text-[clamp(0.95rem,4vw,1.7rem)] font-semibold leading-none text-[var(--humid)] lg:text-[clamp(0.95rem,4.8vw,2rem)]';
-export const LIGHT_UNIT_CLASS = 'text-[0.68em] font-semibold';
+export const LIGHT_UNIT_CLASS = '';

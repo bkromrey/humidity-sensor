@@ -3,8 +3,9 @@ import { DataTable } from './components/DataTable';
 import { DeviceDetailPanel } from './components/DeviceDetailPanel';
 import { DeviceSidebar } from './components/DeviceSidebar';
 import { SegmentedControl } from './components/SegmentedControl';
+import { TemperatureToggle } from './components/TemperatureToggle';
 import { ThemeToggle } from './components/ThemeToggle';
-import type { DetailMode, DeviceReading, PanelMode, WeeklyPoint } from './types/monitoring';
+import type { DetailMode, DeviceReading, PanelMode, TemperatureUnit, WeeklyPoint } from './types/monitoring';
 import {
   CONTAINER_CLASS,
   CONTENT_GRID_NORMAL_CLASS,
@@ -27,6 +28,7 @@ type ApiLatestDevice = {
   sensorId: string;
   humidity: number | null;
   temperatureC: number | null;
+  temperatureF: number | null;
   light: number | null;
   receivedAtUtc?: string;
   ts?: number;
@@ -34,6 +36,7 @@ type ApiLatestDevice = {
 
 type ApiHistoryPoint = {
   temperatureC: number | null;
+  temperatureF: number | null;
   humidity: number | null;
   light: number | null;
   receivedAtUtc?: string;
@@ -62,8 +65,9 @@ function toDeviceReading(item: ApiLatestDevice): DeviceReading {
     status: Date.now() - ts <= ONLINE_WINDOW_MS ? 'online' : 'offline',
     updatedAt: toTimeLabel(ts),
     temperatureC: asNumber(item.temperatureC),
+    temperatureF: asNumber(item.temperatureF),
     humidity: asNumber(item.humidity),
-    photoResistorOhm: asNumber(item.light),
+    lightPercent: asNumber(item.light),
   };
 }
 
@@ -73,8 +77,9 @@ function toWeeklyPoint(item: ApiHistoryPoint): WeeklyPoint {
   return {
     label: new Date(ts).toLocaleDateString([], { weekday: 'short' }),
     temperatureC: asNumber(item.temperatureC),
+    temperatureF: asNumber(item.temperatureF),
     humidity: asNumber(item.humidity),
-    lux: asNumber(item.light),
+    lightPercent: asNumber(item.light),
   };
 }
 
@@ -85,7 +90,10 @@ export default function App() {
   const [selectedId, setSelectedId] = useState('');
   const [panelMode, setPanelMode] = useState<PanelMode>('normal');
   const [detailMode, setDetailMode] = useState<DetailMode>('now');
+  const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>('celsius');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleTemperatureUnit = () =>
+    setTemperatureUnit((prev) => (prev === 'celsius' ? 'fahrenheit' : 'celsius'));
 
   // get selected device data
   const selectedDevice = useMemo<DeviceReading | null>(() => {
@@ -180,6 +188,11 @@ export default function App() {
               options={PANEL_MODE_OPTIONS}
               className={TWO_COL_SEGMENT_CLASS}
             />
+            <TemperatureToggle
+              temperatureUnit={temperatureUnit}
+              onToggle={toggleTemperatureUnit}
+              className="translate-x-[2px]"
+            />
             <ThemeToggle isDarkMode={isDarkMode} onToggle={() => setIsDarkMode((prev) => !prev)} />
           </div>
         </header>
@@ -188,7 +201,12 @@ export default function App() {
         <div className={contentGridClass}>
           {/* left side device cards */}
           <div className={MIN_WIDTH_RESET_CLASS}>
-            <DeviceSidebar devices={devices} selectedId={selectedId} onSelect={setSelectedId} />
+            <DeviceSidebar
+              devices={devices}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              temperatureUnit={temperatureUnit}
+            />
           </div>
 
           {/* right side content by selected mode */}
@@ -203,9 +221,15 @@ export default function App() {
                 viewMode={detailMode}
                 weeklyData={weeklyData}
                 onViewModeChange={setDetailMode}
+                temperatureUnit={temperatureUnit}
               />
             ) : (
-              <DataTable devices={devices} selectedId={selectedId} weeklyData={weeklyData} />
+              <DataTable
+                devices={devices}
+                selectedId={selectedId}
+                weeklyData={weeklyData}
+                temperatureUnit={temperatureUnit}
+              />
             )}
           </div>
         </div>

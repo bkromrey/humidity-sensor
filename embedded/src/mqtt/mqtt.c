@@ -89,7 +89,13 @@ int Init_Network_Comms(){
     wireless_connectivity = WIFI_CONNECTED;
 
   // initialize connection to the MQTT broker
-  init_mqtt();
+  if (init_mqtt()){
+    #if DEBUG_MQTT
+    printf("Failed to initiate MQTT connection to %s\n", PICO_MQTT_SERVER);
+    #endif
+    connected_to_broker = FAILED_TO_CONNECT;
+    return 1;
+  }
 
   // blocking - wait for the callback function to update status before continuing
   // the connection has a timeout of 60 seconds (or as MQTT_CONNECT_TIMOUT is
@@ -166,10 +172,10 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   
   // publish the data to mqtt broker
   if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
-    return 1;
     #if DEBUG_MQTT
     printf("ERROR: Unable to publish data to MQTT broker.\n");
     #endif
+    return 1;
   }
 
   return 0;
@@ -270,18 +276,25 @@ int init_mqtt(){
 
   // convert IP address from a string before passing through to the mqtt connect call
   ip_addr_t server_ip;
-  ipaddr_aton(PICO_MQTT_SERVER, &server_ip);
-
-  cyw43_arch_lwip_begin();
-
-  if (mqtt_client_connect(mqtt_client, &server_ip, PICO_MQTT_PORT, callback_mqtt_connect, 0, &client_info) != ERR_OK){
+  if (!ipaddr_aton(PICO_MQTT_SERVER, &server_ip)){
     #if DEBUG_MQTT
-    printf("ERROR initiating connection to MQTT server!\n");
+    printf("ERROR: PICO_MQTT_SERVER must be an IPv4 address, got: %s\n", PICO_MQTT_SERVER);
     #endif
+    connected_to_broker = FAILED_TO_CONNECT;
     return 1;
   }
 
+  cyw43_arch_lwip_begin();
+  err_t connect_err = mqtt_client_connect(mqtt_client, &server_ip, PICO_MQTT_PORT, callback_mqtt_connect, 0, &client_info);
   cyw43_arch_lwip_end();
+
+  if (connect_err != ERR_OK){
+    #if DEBUG_MQTT
+    printf("ERROR initiating connection to MQTT server!\n");
+    #endif
+    connected_to_broker = FAILED_TO_CONNECT;
+    return 1;
+  }
 
  
   return 0;
@@ -329,6 +342,5 @@ void callback_mqtt_connect(mqtt_client_t *mqtt_client, void *arg, mqtt_connectio
     connected_to_broker = FAILED_TO_CONNECT;
   
 }
-
 
 
