@@ -1,4 +1,5 @@
-export const ICON_CLASS_BASE = 'cursor-pointer p-1 transition duration-200 hover:scale-110 hover:-rotate-6';
+export const ICON_CLASS_BASE =
+  'group cursor-pointer p-1';
 export const MOON_ICON_CLASS =
   'text-[var(--humid)] hover:text-[#4a9ceb] hover:drop-shadow-[0_0_8px_rgba(74,156,235,0.65)]';
 export const SUN_ICON_CLASS =

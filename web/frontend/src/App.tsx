@@ -58,10 +58,10 @@ function toTimeLabel(timestamp: number): string {
 
 function toDateLabel(timestamp: number): string {
   const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, '0');
+  const day = date.getDate();
   const month = date.toLocaleString('en-US', { month: 'short' });
   const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
+  return `${month} ${day}, ${year}`;
 }
 
 function toDateTimeLabel(timestamp: number): string {
@@ -88,7 +88,8 @@ function toWeeklyPoint(item: ApiHistoryPoint): WeeklyPoint {
   const parsed = item.receivedAtUtc ? Date.parse(item.receivedAtUtc) : item.ts ?? Date.now();
   const ts = Number.isFinite(parsed) ? parsed : Date.now();
   return {
-    label: toDateLabel(ts),
+    label: toTimeLabel(ts),
+    updatedAt: toDateLabel(ts),
     temperatureC: asNumber(item.temperatureC),
     temperatureF: asNumber(item.temperatureF),
     humidity: asNumber(item.humidity),
@@ -176,10 +177,16 @@ export default function App() {
     if (!selectedDevice) return;
 
     async function loadHistory(): Promise<void> {
-      const response = await fetch(`${API_BASE}/api/sensors/${selectedDevice.id}/history`);
+      const now = new Date();
+      const from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const query = new URLSearchParams({
+        from: from.toISOString(),
+        to: now.toISOString(),
+      });
+      const response = await fetch(`${API_BASE}/api/sensors/${selectedDevice.id}/history?${query.toString()}`);
       if (!response.ok) return;
       const payload = (await response.json()) as ApiHistoryPoint[];
-      const points = payload.slice(0, 7).reverse().map(toWeeklyPoint);
+      const points = payload.reverse().map(toWeeklyPoint);
       setHistoryByDevice((current) => ({ ...current, [selectedDevice.id]: points }));
     }
 

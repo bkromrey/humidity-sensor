@@ -8,16 +8,19 @@ type MetricCardVariant = 'temp' | 'humidity' | 'light';
 type MetricCardProps = {
   value: string;
   subValue: string;
+  subValueTitle?: string;
   label: string;
   variant: MetricCardVariant;
 };
 
-export function MetricCard({ value, subValue, label, variant }: MetricCardProps) {
+export function MetricCard({ value, subValue, subValueTitle, label, variant }: MetricCardProps) {
   return (
     // style color depends on selected variant
     <div className={CARD_CLASS} style={VARIANT_STYLES[variant] as CSSProperties}>
       <p className={VALUE_CLASS}>{value}</p>
-      <p className={SUBVALUE_CLASS}>{subValue}</p>
+      <p className={SUBVALUE_CLASS} title={subValueTitle}>
+        {subValue}
+      </p>
       <p className={LABEL_CLASS}>{label}</p>
     </div>
   );

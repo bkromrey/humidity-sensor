@@ -14,6 +14,7 @@ export type DeviceReading = {
 
 export type WeeklyPoint = {
   label: string;
+  updatedAt: string;
   temperatureC: number;
   temperatureF: number;
   humidity: number;

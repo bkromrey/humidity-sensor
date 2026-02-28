@@ -14,8 +14,8 @@ type TemperatureToggleProps = {
 };
 
 export function TemperatureToggle({ temperatureUnit, onToggle, className = '' }: TemperatureToggleProps) {
-  const currentUnit = temperatureUnit === 'celsius' ? 'C' : 'F';
-  const nextUnit = temperatureUnit === 'celsius' ? 'F' : 'C';
+  const currentUnit = temperatureUnit === 'celsius' ? '°C' : '°F';
+  const nextUnit = temperatureUnit === 'celsius' ? '°F' : '°C';
 
   return (
     <button

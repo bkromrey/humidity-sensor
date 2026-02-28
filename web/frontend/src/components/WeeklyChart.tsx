@@ -98,7 +98,7 @@ export function WeeklyChart({ data, temperatureUnit }: WeeklyChartProps) {
           const x = prepared.paddingX + index * prepared.xStep;
           return (
             <text
-              key={point.label}
+              key={`${point.label}-${point.updatedAt}-${index}`}
               x={x}
               y={prepared.height - DAY_LABEL_Y_OFFSET}
               textAnchor="middle"

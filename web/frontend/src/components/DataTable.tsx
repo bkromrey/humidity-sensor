@@ -39,7 +39,7 @@ type DataTableProps = {
 };
 
 const MAIN_TABLE_HEADERS_BASE = ['Pico', 'Updated', 'Humidity', 'Light %'];
-const WEEKLY_TABLE_HEADERS_BASE = ['Day', 'Updated', 'Humidity', 'Light %'];
+const WEEKLY_TABLE_HEADERS_BASE = ['Time', 'Date', 'Humidity', 'Light %'];
 
 export function DataTable({ devices, selectedId, weeklyData, temperatureUnit }: DataTableProps) {
   // fallback to first item if id is not found
@@ -94,7 +94,7 @@ export function DataTable({ devices, selectedId, weeklyData, temperatureUnit }: 
                     // extra nested table only for selected row
                     <tr className={NESTED_WRAP_ROW_CLASS}>
                       <td colSpan={5} className={NESTED_SECTION_CELL_CLASS}>
-                        <p className={WEEKLY_TITLE_CLASS}>Weekly history for {device.name}</p>
+                        <p className={WEEKLY_TITLE_CLASS}>Last 24h history for {device.name}</p>
 
                         <table className={NESTED_TABLE_CLASS}>
                           <thead>
@@ -107,10 +107,10 @@ export function DataTable({ devices, selectedId, weeklyData, temperatureUnit }: 
                             </tr>
                           </thead>
                           <tbody>
-                            {weeklyData.map((point) => (
-                              <tr key={point.label} className={NESTED_ROW_CLASS}>
+                            {weeklyData.map((point, index) => (
+                              <tr key={`${point.label}-${point.updatedAt}-${index}`} className={NESTED_ROW_CLASS}>
                                 <td className={`${NESTED_CELL_CLASS} ${FONT_SEMIBOLD_CLASS}`}>{point.label}</td>
-                                <td className={`${NESTED_CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{device.updatedAt}</td>
+                                <td className={`${NESTED_CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{point.updatedAt}</td>
                                 <td className={`${NESTED_CELL_CLASS} ${TEMP_COLUMN_CLASS} ${TEMP_TEXT_CLASS}`}>
                                   {temperatureByUnit(point.temperatureC, point.temperatureF, temperatureUnit).toFixed(1)}
                                   {temperatureUnitSymbol(temperatureUnit)}
