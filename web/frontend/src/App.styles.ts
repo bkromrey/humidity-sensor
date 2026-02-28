@@ -5,7 +5,7 @@ export const HEADER_CLASS =
   'flex flex-col gap-3 border-b border-[var(--line)] pb-4 md:flex-row md:items-end md:justify-between md:pb-7';
 export const CONTENT_GRID_BASE_CLASS = 'mt-6 grid gap-6';
 export const CONTENT_GRID_NORMAL_CLASS = `${CONTENT_GRID_BASE_CLASS} lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1.42fr)]`;
-export const CONTENT_GRID_TABLE_CLASS = `${CONTENT_GRID_BASE_CLASS} lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]`;
+export const CONTENT_GRID_TABLE_CLASS = `${CONTENT_GRID_BASE_CLASS} lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1.42fr)]`;
 export const TWO_COL_SEGMENT_CLASS = 'grid-cols-2';
 export const TITLE_CLASS = 'font-heading whitespace-nowrap text-[clamp(1.05rem,4.8vw,1.9rem)] leading-tight';
 export const HEADER_CONTROLS_CLASS = 'flex flex-wrap items-center gap-2';

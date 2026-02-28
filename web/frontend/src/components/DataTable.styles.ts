@@ -4,19 +4,19 @@ export const HEADER_CLASS = 'border-b border-[var(--line)] px-5 py-5 md:px-7 md:
 export const TITLE_CLASS = 'font-heading text-2xl sm:text-3xl';
 export const SUBTITLE_CLASS = 'mt-2 text-base text-[var(--text-soft)] sm:text-lg';
 export const TABLE_WRAP_CLASS = 'overflow-x-auto p-5 md:p-7';
-export const TABLE_CLASS = 'w-full min-w-[560px] xl:min-w-[700px] border-collapse';
+export const TABLE_CLASS = 'w-full table-fixed border-collapse';
 export const NESTED_TABLE_CLASS =
-  'w-full min-w-[520px] xl:min-w-[620px] border-collapse rounded-xl border border-[var(--line)]';
+  'w-full table-fixed border-collapse rounded-xl border border-[var(--line)]';
 export const MAIN_HEAD_ROW_CLASS =
-  'border-b border-[var(--line)] text-left text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]';
+  'border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.1em] text-[var(--text-soft)] sm:text-xs';
 export const NESTED_HEAD_ROW_CLASS =
-  'border-b border-[var(--line)] text-left text-xs uppercase tracking-[0.12em] text-[var(--text-soft)]';
-export const MAIN_ROW_CLASS = 'border-b border-[var(--line)]/70 text-sm sm:text-base';
+  'border-b border-[var(--line)] text-left text-[10px] uppercase tracking-[0.1em] text-[var(--text-soft)] sm:text-xs';
+export const MAIN_ROW_CLASS = 'border-b border-[var(--line)]/70 text-xs sm:text-sm';
 export const MAIN_ROW_SELECTED_CLASS = 'bg-[var(--card-selected)]';
 export const NESTED_WRAP_ROW_CLASS = 'border-b border-[var(--line)]/70 bg-[var(--table-nested-bg)]';
-export const NESTED_ROW_CLASS = 'border-b border-[var(--line)]/60 text-sm';
-export const CELL_CLASS = 'px-3 py-3';
-export const NESTED_CELL_CLASS = 'px-3 py-2';
+export const NESTED_ROW_CLASS = 'border-b border-[var(--line)]/60 text-xs sm:text-sm';
+export const CELL_CLASS = 'truncate px-2 py-2 sm:px-3';
+export const NESTED_CELL_CLASS = 'truncate px-2 py-2 sm:px-3';
 export const NESTED_SECTION_CELL_CLASS = 'px-3 py-4';
 export const TEMP_COLUMN_CLASS = 'w-[7.5rem] whitespace-nowrap tabular-nums';
 export const FONT_SEMIBOLD_CLASS = 'font-semibold';
