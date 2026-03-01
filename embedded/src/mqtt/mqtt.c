@@ -197,7 +197,7 @@ int generate_payload(const Payload_Data *Sensor_Data, char json_payload[]){
     sprintf(json_payload, "{\"temperature_f\": \"%2.1f\","
                    "\"temperature_c\": \"%2.1f\","
                    "\"humidity\": \"%2.1f\","
-                   "\"light\": \"%d\"}",Sensor_Data->DHT20_Data.temperature_f,
+                   "\"light\": \"%2.1f\"}",Sensor_Data->DHT20_Data.temperature_f,
           Sensor_Data->DHT20_Data.temperature_c, Sensor_Data->DHT20_Data.humidity, 
           Sensor_Data->ADC_Data);
 
