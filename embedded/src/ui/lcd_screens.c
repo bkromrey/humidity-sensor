@@ -55,7 +55,6 @@ void ui_lcd_init(void) {
 
     lcd_i2c_init(&g_lcd, LCD_I2C_PORT, LCD_I2C_ADDR, 16, 2);
     lcd_create_char(&g_lcd,1, degree_symbol);
-    ui_show_loading();
 }
 
 /**
@@ -120,7 +119,7 @@ void ui_show_photores(const Payload_Data *p) {
         snprintf(l2, sizeof(l2), "ADC: ----");
     } else {
         snprintf(l1, sizeof(l1), "Light");
-        snprintf(l2, sizeof(l2), "ADC: %4u", (unsigned)p->ADC_Data);
+        snprintf(l2, sizeof(l2), "ADC: %5.1f%%", p->ADC_Data);
     }
 
     write_2lines(l1, l2);

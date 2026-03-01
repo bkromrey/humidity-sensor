@@ -87,22 +87,6 @@ if(DEFINED ENV{PICO_SENSOR_ID} AND (NOT PICO_SENSOR_ID))
   set(PICO_SENSOR_ID $ENV{PICO_SENSOR_ID})
 endif()
 
-function(require_non_empty var_name)
-  if(NOT DEFINED ${var_name} OR "${${var_name}}" STREQUAL "")
-    message(FATAL_ERROR
-      "${var_name} is required and cannot be empty. "
-      "Set it via environment variable or pass -D${var_name}=..."
-    )
-  endif()
-endfunction()
-
-require_non_empty(PICO_WIFI_SSID)
-require_non_empty(PICO_WIFI_PASS)
-require_non_empty(PICO_MQTT_SERVER)
-require_non_empty(PICO_MQTT_USER)
-require_non_empty(PICO_MQTT_PASS)
-require_non_empty(PICO_SENSOR_ID)
-
 #include these envars when compiling
 target_compile_definitions(humidity-sensor PRIVATE
   PICO_WIFI_SSID=\"${PICO_WIFI_SSID}\"
