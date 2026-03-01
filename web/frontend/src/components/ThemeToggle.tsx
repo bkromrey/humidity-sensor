@@ -26,7 +26,7 @@ export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
       onClick={onToggle}
       aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`${ICON_CLASS_BASE} group ${shownThemeIcon === 'moon' ? MOON_ICON_CLASS : SUN_ICON_CLASS}`}
+      className={`${ICON_CLASS_BASE} ${shownThemeIcon === 'moon' ? MOON_ICON_CLASS : SUN_ICON_CLASS}`}
     >
       <svg
         viewBox="0 0 24 24"
@@ -36,7 +36,6 @@ export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
       >
         {shownThemeIcon === 'moon' ? (
           <>
-            {/* moon is default, sun appears on hover */}
             <path
               className={HIDE_ON_HOVER_CLASS}
               d={MOON_PATH}
@@ -52,7 +51,6 @@ export function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) {
           </>
         ) : (
           <>
-            {/* sun is default, moon appears on hover */}
             <g className={HIDE_ON_HOVER_CLASS}>
               <circle cx="12" cy="12" r="4.2" stroke={STROKE_COMMON} strokeWidth={STROKE_WIDTH} />
               <path d={SUN_RAYS_PATH} stroke={STROKE_COMMON} strokeWidth={STROKE_WIDTH} strokeLinecap="round" />

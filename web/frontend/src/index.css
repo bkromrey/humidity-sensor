@@ -18,6 +18,7 @@
   --switch-hover: rgba(255, 255, 255, 0.78);
   --switch-active-bg: linear-gradient(90deg, #4a9ceb, #3f87de);
   --switch-active-text: #ffffff;
+  --temp-toggle-idle: var(--text-soft);
   --table-nested-bg: rgba(255, 255, 255, 0.45);
   --kpi-temp-bg: linear-gradient(135deg, #ff6f36, #f1662f);
   --kpi-hum-bg: linear-gradient(135deg, #4a9ceb, #3f87de);
@@ -50,6 +51,7 @@
   --switch-hover: #23354c;
   --switch-active-bg: var(--card-selected);
   --switch-active-text: var(--accent);
+  --temp-toggle-idle: #4a9ceb;
   --table-nested-bg: #1a2638;
   --kpi-temp-bg: linear-gradient(135deg, rgba(255, 111, 54, 0.38), rgba(241, 102, 47, 0.24));
   --kpi-hum-bg: linear-gradient(135deg, rgba(74, 156, 235, 0.38), rgba(63, 135, 222, 0.24));
@@ -64,14 +66,25 @@ body {
   min-width: 320px;
   color: var(--text-main);
   background: var(--page-bg);
+  cursor: default;
   transition: background 220ms ease, color 220ms ease;
 }
 
-* {
-  transition:
-    background-color 220ms ease,
-    color 220ms ease,
-    border-color 220ms ease;
+@layer base {
+  * {
+    transition:
+      background-color 220ms ease,
+      color 220ms ease,
+      border-color 220ms ease;
+  }
+}
+
+button,
+a,
+[role='button'],
+summary,
+label[for] {
+  cursor: pointer;
 }
 
 #root {

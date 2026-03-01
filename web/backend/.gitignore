@@ -109,3 +109,4 @@ web/**/.cache/
 ################################
 .DS_Store
 Thumbs.db
+.env

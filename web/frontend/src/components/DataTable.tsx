@@ -1,10 +1,11 @@
 import { Fragment } from 'react';
-import type { DeviceReading, WeeklyPoint } from '../types/monitoring';
-import { luxToResistance, resistanceToLux, toFahrenheit } from '../utils/sensorMath';
+import type { DeviceReading, HistoryRange, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   CELL_CLASS,
   FONT_SEMIBOLD_CLASS,
   HEADER_CLASS,
+  HEAD_CELL_CLASS,
   HUMIDITY_TEXT_CLASS,
   LIGHT_TEXT_CLASS,
   MAIN_HEAD_ROW_CLASS,
@@ -12,11 +13,13 @@ import {
   MAIN_ROW_SELECTED_CLASS,
   MUTED_TEXT_CLASS,
   NESTED_CELL_CLASS,
+  NESTED_HEAD_CELL_CLASS,
   NESTED_HEAD_ROW_CLASS,
   NESTED_ROW_CLASS,
   NESTED_SECTION_CELL_CLASS,
   NESTED_TABLE_CLASS,
   NESTED_WRAP_ROW_CLASS,
+  NO_WRAP_CLASS,
   PANEL_CLASS,
   SUBTITLE_CLASS,
   TABLE_CLASS,
@@ -33,14 +36,34 @@ type DataTableProps = {
   selectedId: string;
   // weekly points for selected device
   weeklyData: WeeklyPoint[];
+  // selected data interval mode
+  historyRange: HistoryRange;
+  // selected global temperature unit
+  temperatureUnit: TemperatureUnit;
 };
 
-const MAIN_TABLE_HEADERS = ['Pico', 'Updated', 'Temp °C', 'Temp °F', 'Humidity', 'Light lx', 'Photoresistor'];
-const WEEKLY_TABLE_HEADERS = ['Day', 'Updated', 'Temp °C', 'Temp °F', 'Humidity', 'Light lx', 'Photoresistor'];
+const MAIN_TABLE_HEADERS_BASE = ['Pico', 'Updated', 'Humidity', 'Light %'];
+const WEEKLY_TABLE_HEADERS_BASE = ['Slot', 'Date', 'Humidity', 'Light %'];
+const COLUMN_WIDTHS = ['w-auto md:w-[33%]', 'w-auto md:w-[19%]', 'w-auto md:w-[16%]', 'w-auto md:w-[16%]', 'w-auto md:w-[16%]'] as const;
 
-export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
+export function DataTable({
+  devices,
+  selectedId,
+  weeklyData,
+  historyRange,
+  temperatureUnit,
+}: DataTableProps) {
   // fallback to first item if id is not found
   const selectedDevice = devices.find((device) => device.id === selectedId) ?? devices[0];
+  const temperatureHeader = `Temp ${temperatureUnitSymbol(temperatureUnit)}`;
+  const mainTableHeaders = [MAIN_TABLE_HEADERS_BASE[0], MAIN_TABLE_HEADERS_BASE[1], temperatureHeader, ...MAIN_TABLE_HEADERS_BASE.slice(2)];
+  const historyPrimaryHeader = historyRange === '1d' ? 'Time' : 'Day';
+  const weeklyTableHeaders = [
+    WEEKLY_TABLE_HEADERS_BASE[1],
+    historyPrimaryHeader,
+    temperatureHeader,
+    ...WEEKLY_TABLE_HEADERS_BASE.slice(2),
+  ];
 
   return (
     <article className={PANEL_CLASS}>
@@ -51,11 +74,16 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
 
       <div className={TABLE_WRAP_CLASS}>
         <table className={TABLE_CLASS}>
+          <colgroup>
+            {COLUMN_WIDTHS.map((widthClass, index) => (
+              <col key={`main-col-${index}`} className={widthClass} />
+            ))}
+          </colgroup>
           <thead>
             {/* main table header */}
             <tr className={MAIN_HEAD_ROW_CLASS}>
-              {MAIN_TABLE_HEADERS.map((header) => (
-                <th key={header} className={CELL_CLASS}>
+              {mainTableHeaders.map((header) => (
+                <th key={header} className={`${HEAD_CELL_CLASS} ${NO_WRAP_CLASS}`}>
                   {header}
                 </th>
               ))}
@@ -63,33 +91,46 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
           </thead>
           <tbody>
             {devices.map((device) => {
-              // convert sensor resistance to lux for display
-              const lux = resistanceToLux(device.photoResistorOhm);
+              const temperature = temperatureByUnit(device.temperatureC, device.temperatureF, temperatureUnit);
               const isSelected = device.id === selectedId;
 
               return (
                 <Fragment key={device.id}>
                   <tr className={`${MAIN_ROW_CLASS} ${isSelected ? MAIN_ROW_SELECTED_CLASS : ''}`}>
-                    <td className={`${CELL_CLASS} ${FONT_SEMIBOLD_CLASS}`}>{device.name}</td>
-                    <td className={`${CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{device.updatedAt}</td>
-                    <td className={`${CELL_CLASS} ${TEMP_TEXT_CLASS}`}>{device.temperatureC.toFixed(1)}°C</td>
-                    <td className={CELL_CLASS}>{toFahrenheit(device.temperatureC).toFixed(1)}°F</td>
-                    <td className={`${CELL_CLASS} ${HUMIDITY_TEXT_CLASS}`}>{device.humidity}%</td>
-                    <td className={`${CELL_CLASS} ${LIGHT_TEXT_CLASS}`}>{lux}</td>
-                    <td className={`${CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{device.photoResistorOhm} ohm</td>
+                    <td className={`${CELL_CLASS} ${NO_WRAP_CLASS} ${FONT_SEMIBOLD_CLASS}`}>{device.name}</td>
+                    <td className={`${CELL_CLASS} ${NO_WRAP_CLASS} ${MUTED_TEXT_CLASS}`}>{device.updatedAt}</td>
+                    <td className={`${CELL_CLASS} ${NO_WRAP_CLASS} ${TEMP_TEXT_CLASS}`}>
+                      {temperature.toFixed(1)}
+                      {temperatureUnitSymbol(temperatureUnit)}
+                    </td>
+                    <td className={`${CELL_CLASS} ${NO_WRAP_CLASS} ${HUMIDITY_TEXT_CLASS}`}>
+                      {device.humidity.toFixed(1)}%
+                    </td>
+                    <td className={`${CELL_CLASS} ${NO_WRAP_CLASS} ${LIGHT_TEXT_CLASS}`}>
+                      {device.lightPercent.toFixed(1)}%
+                    </td>
                   </tr>
 
                   {isSelected ? (
                     // extra nested table only for selected row
                     <tr className={NESTED_WRAP_ROW_CLASS}>
-                      <td colSpan={7} className={NESTED_SECTION_CELL_CLASS}>
-                        <p className={WEEKLY_TITLE_CLASS}>Weekly history for {device.name}</p>
+                      <td colSpan={5} className={NESTED_SECTION_CELL_CLASS}>
+                        <p className={WEEKLY_TITLE_CLASS}>
+                          {historyRange === '1d'
+                            ? `Last 24h history (3h average) for ${device.name}`
+                            : `Last 7 days history (daily average) for ${device.name}`}
+                        </p>
 
                         <table className={NESTED_TABLE_CLASS}>
+                          <colgroup>
+                            {COLUMN_WIDTHS.map((widthClass, index) => (
+                              <col key={`history-col-${index}`} className={widthClass} />
+                            ))}
+                          </colgroup>
                           <thead>
                             <tr className={NESTED_HEAD_ROW_CLASS}>
-                              {WEEKLY_TABLE_HEADERS.map((header) => (
-                                <th key={header} className={NESTED_CELL_CLASS}>
+                              {weeklyTableHeaders.map((header) => (
+                                <th key={header} className={`${NESTED_HEAD_CELL_CLASS} ${NO_WRAP_CLASS}`}>
                                   {header}
                                 </th>
                               ))}
@@ -97,14 +138,19 @@ export function DataTable({ devices, selectedId, weeklyData }: DataTableProps) {
                           </thead>
                           <tbody>
                             {weeklyData.map((point) => (
-                              <tr key={point.label} className={NESTED_ROW_CLASS}>
-                                <td className={`${NESTED_CELL_CLASS} ${FONT_SEMIBOLD_CLASS}`}>{point.label}</td>
-                                <td className={`${NESTED_CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{device.updatedAt}</td>
-                                <td className={`${NESTED_CELL_CLASS} ${TEMP_TEXT_CLASS}`}>{point.temperatureC.toFixed(1)}°C</td>
-                                <td className={NESTED_CELL_CLASS}>{toFahrenheit(point.temperatureC).toFixed(1)}°F</td>
-                                <td className={`${NESTED_CELL_CLASS} ${HUMIDITY_TEXT_CLASS}`}>{point.humidity}%</td>
-                                <td className={`${NESTED_CELL_CLASS} ${LIGHT_TEXT_CLASS}`}>{point.lux}</td>
-                                <td className={`${NESTED_CELL_CLASS} ${MUTED_TEXT_CLASS}`}>{luxToResistance(point.lux)} ohm</td>
+                              <tr key={point.ts} className={NESTED_ROW_CLASS}>
+                                <td className={`${NESTED_CELL_CLASS} ${NO_WRAP_CLASS} ${MUTED_TEXT_CLASS}`}>{point.updatedAt}</td>
+                                <td className={`${NESTED_CELL_CLASS} ${NO_WRAP_CLASS} ${FONT_SEMIBOLD_CLASS}`}>{point.label}</td>
+                                <td className={`${NESTED_CELL_CLASS} ${NO_WRAP_CLASS} ${TEMP_TEXT_CLASS}`}>
+                                  {temperatureByUnit(point.temperatureC, point.temperatureF, temperatureUnit).toFixed(1)}
+                                  {temperatureUnitSymbol(temperatureUnit)}
+                                </td>
+                                <td className={`${NESTED_CELL_CLASS} ${NO_WRAP_CLASS} ${HUMIDITY_TEXT_CLASS}`}>
+                                  {point.humidity.toFixed(1)}%
+                                </td>
+                                <td className={`${NESTED_CELL_CLASS} ${NO_WRAP_CLASS} ${LIGHT_TEXT_CLASS}`}>
+                                  {point.lightPercent.toFixed(1)}%
+                                </td>
                               </tr>
                             ))}
                           </tbody>

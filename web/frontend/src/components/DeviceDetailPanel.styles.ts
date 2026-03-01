@@ -7,3 +7,4 @@ export const DEVICE_NAME_CLASS = 'font-heading text-2xl sm:text-3xl md:text-4xl'
 export const DEVICE_META_CLASS = 'mt-2 text-base text-[var(--text-soft)] sm:text-lg md:text-xl';
 export const PANEL_BODY_CLASS = 'space-y-5 p-5 md:p-7';
 export const DETAIL_MODE_ITEM_CLASS = 'sm:px-10';
+export const MODE_ROW_CLASS = 'flex flex-wrap items-center justify-between gap-2';
