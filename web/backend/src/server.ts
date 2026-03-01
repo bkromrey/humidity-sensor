@@ -46,10 +46,15 @@ async function main(): Promise<void> {
       };
     }
 
+    const rangeMs =
+      from && to && to.getTime() > from.getTime() ? to.getTime() - from.getTime() : 0;
+    // Keep responses bounded, but allow larger pulls for 7-day chart/table aggregation.
+    const historyLimit = rangeMs >= 6 * 24 * 60 * 60 * 1000 ? 20000 : 5000;
+
     const docs = await collections.sensorHistory
       .find(filter, { projection: { rawPayload: 0 } })
       .sort({ receivedAtUtc: -1 })
-      .limit(5000)
+      .limit(historyLimit)
       .toArray();
 
     res.json(docs);

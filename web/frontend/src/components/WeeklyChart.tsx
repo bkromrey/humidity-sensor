@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { SegmentedControl } from './SegmentedControl';
-import type { ChartMetric, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import type { ChartMetric, HistoryRange, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
 import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   AXIS_LABEL_FONT_SIZE,
@@ -13,22 +13,28 @@ import {
   DAY_LABEL_Y_OFFSET,
   EMPTY_STATE_CLASS,
   GRID_LINE_STROKE,
+  HISTORY_HINT_CLASS,
   METRIC_SWITCH_CLASS,
   METRIC_SWITCH_ITEM_CLASS,
 } from './WeeklyChart.styles';
 
 type WeeklyChartProps = {
   data: WeeklyPoint[];
+  historyRange: HistoryRange;
   temperatureUnit: TemperatureUnit;
 };
 
 const metricConfigBase = {
   temperatureC: { label: 'Temperature', color: '#f97316', digits: 1 },
-  humidity: { label: 'Humidity', color: '#3b82f6', unit: '%', digits: 0 },
-  lightPercent: { label: 'Light', color: '#f59e0b', unit: '%', digits: 0 },
+  humidity: { label: 'Humidity', color: '#3b82f6', unit: '%', digits: 1 },
+  lightPercent: { label: 'Light', color: '#f59e0b', unit: '%', digits: 1 },
 } as const;
 
-export function WeeklyChart({ data, temperatureUnit }: WeeklyChartProps) {
+export function WeeklyChart({
+  data,
+  historyRange,
+  temperatureUnit,
+}: WeeklyChartProps) {
   const [selectedMetric, setSelectedMetric] = useState<ChartMetric>('temperatureC');
   const prepared = useMemo(
     () => buildChartData(data, selectedMetric, temperatureUnit),
@@ -46,6 +52,9 @@ export function WeeklyChart({ data, temperatureUnit }: WeeklyChartProps) {
 
   return (
     <div className={CHART_WRAP_CLASS}>
+      <p className={HISTORY_HINT_CLASS}>
+        {historyRange === '1d' ? 'Last 24h (3h average)' : 'Last 7 days (daily average)'}
+      </p>
       <SegmentedControl
         value={selectedMetric}
         onChange={setSelectedMetric}
@@ -98,7 +107,7 @@ export function WeeklyChart({ data, temperatureUnit }: WeeklyChartProps) {
           const x = prepared.paddingX + index * prepared.xStep;
           return (
             <text
-              key={`${point.label}-${point.updatedAt}-${index}`}
+              key={`${point.ts}-${index}`}
               x={x}
               y={prepared.height - DAY_LABEL_Y_OFFSET}
               textAnchor="middle"

@@ -1,13 +1,20 @@
 import { SegmentedControl } from './SegmentedControl';
 import { MetricCard } from './MetricCard';
 import { WeeklyChart } from './WeeklyChart';
-import type { DetailMode, DeviceReading, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import type {
+  DetailMode,
+  DeviceReading,
+  HistoryRange,
+  TemperatureUnit,
+  WeeklyPoint,
+} from '../types/monitoring';
 import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   DETAIL_MODE_ITEM_CLASS,
   DEVICE_META_CLASS,
   DEVICE_NAME_CLASS,
   METRIC_GRID_CLASS,
+  MODE_ROW_CLASS,
   PANEL_BODY_CLASS,
   PANEL_CLASS,
   PANEL_HEADER_CLASS,
@@ -21,6 +28,8 @@ type DeviceDetailPanelProps = {
   viewMode: DetailMode;
   // weekly points for chart mode
   weeklyData: WeeklyPoint[];
+  // selected data interval mode
+  historyRange: HistoryRange;
   // change detail mode from segmented control
   onViewModeChange: (mode: DetailMode) => void;
   // selected global temperature unit
@@ -130,6 +139,7 @@ export function DeviceDetailPanel({
   device,
   viewMode,
   weeklyData,
+  historyRange,
   onViewModeChange,
   temperatureUnit,
 }: DeviceDetailPanelProps) {
@@ -147,13 +157,15 @@ export function DeviceDetailPanel({
 
       <div className={PANEL_BODY_CLASS}>
         {/* switch between now and chart views */}
-        <SegmentedControl
-          value={viewMode}
-          onChange={onViewModeChange}
-          options={DETAIL_MODE_OPTIONS}
-          className={TWO_COL_SEGMENT_CLASS}
-          itemClassName={DETAIL_MODE_ITEM_CLASS}
-        />
+        <div className={MODE_ROW_CLASS}>
+          <SegmentedControl
+            value={viewMode}
+            onChange={onViewModeChange}
+            options={DETAIL_MODE_OPTIONS}
+            className={TWO_COL_SEGMENT_CLASS}
+            itemClassName={DETAIL_MODE_ITEM_CLASS}
+          />
+        </div>
 
         {viewMode === 'now' ? (
           // current values as metric cards
@@ -167,14 +179,14 @@ export function DeviceDetailPanel({
             />
             <MetricCard
               variant="humidity"
-              value={`${device.humidity}%`}
+              value={`${device.humidity.toFixed(1)}%`}
               subValue={humidityRank.short}
               subValueTitle={humidityRank.details}
               label="Humidity"
             />
             <MetricCard
               variant="light"
-              value={`${device.lightPercent}%`}
+              value={`${device.lightPercent.toFixed(1)}%`}
               subValue={lightRank.short}
               subValueTitle={lightRank.details}
               label="Light"
@@ -182,7 +194,11 @@ export function DeviceDetailPanel({
           </div>
         ) : (
           // week trend chart
-          <WeeklyChart data={weeklyData} temperatureUnit={temperatureUnit} />
+          <WeeklyChart
+            data={weeklyData}
+            historyRange={historyRange}
+            temperatureUnit={temperatureUnit}
+          />
         )}
       </div>
     </article>

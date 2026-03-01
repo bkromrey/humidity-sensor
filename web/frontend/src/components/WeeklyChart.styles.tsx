@@ -4,6 +4,8 @@ import type { ChartMetric } from '../types/monitoring';
 export const EMPTY_STATE_CLASS =
   'rounded-2xl border border-[var(--line)] bg-[var(--soft)] p-4 text-sm text-[var(--text-soft)]';
 export const CHART_WRAP_CLASS = 'rounded-2xl border border-[var(--line)] bg-[var(--soft)] p-4 md:p-5';
+export const HISTORY_HINT_CLASS =
+  'mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)] sm:text-xs';
 export const METRIC_SWITCH_CLASS = 'mb-3 grid-cols-3 text-xs sm:text-sm';
 export const METRIC_SWITCH_ITEM_CLASS = 'px-2 py-1.5 sm:px-6';
 export const CHART_SVG_CLASS = 'h-auto w-full';

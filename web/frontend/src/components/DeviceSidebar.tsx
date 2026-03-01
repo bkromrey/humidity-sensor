@@ -69,13 +69,13 @@ export function DeviceSidebar({ devices, selectedId, onSelect, temperatureUnit }
                     desktopLabel={DESKTOP_HUMIDITY_LABEL}
                   />
                 </p>
-                <p className={HUMIDITY_VALUE_CLASS}>{device.humidity}%</p>
+                <p className={HUMIDITY_VALUE_CLASS}>{device.humidity.toFixed(1)}%</p>
               </div>
 
               <div className={LIGHT_CELL_CLASS}>
                 <p className={METRIC_LABEL_CLASS}>Light</p>
                 <p className={`${METRIC_VALUE_CLASS} text-[var(--light)]`}>
-                  <span>{device.lightPercent}</span>
+                  <span>{device.lightPercent.toFixed(1)}</span>
                   <span className={LIGHT_UNIT_CLASS}>%</span>
                 </p>
               </div>
