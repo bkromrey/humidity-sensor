@@ -84,8 +84,6 @@ async function main(): Promise<void> {
       photores: doc.light,
       ts: doc.receivedAtUtc.getTime(),
       sensorId: doc.sensorId,
-      backendTimezone: doc.backendTimezone,
-      backendLocalTs: doc.receivedAtLocal,
     });
   });
 

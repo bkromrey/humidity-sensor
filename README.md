@@ -144,7 +144,6 @@ Edit `web/backend/.env` and set these values:
 * `MQTT_PASSWORD`
 * `MQTT_CLIENT_ID`
 * `HISTORY_INTERVAL_MINUTES`
-* `BACKEND_TIMEZONE`
 
 ### MongoDB Atlas setup (cloud)
 
@@ -209,7 +208,8 @@ Expected JSON payload example:
 
 * `sensor_latest`: updated for every incoming MQTT message.
 * `sensor_history`: stores snapshots no more than once every 30 minutes per sensor.
-* All source-of-truth timestamps are UTC in DB; backend also attaches local time based on `BACKEND_TIMEZONE`.
+* All source-of-truth timestamps are UTC in DB and API responses.
+* User-local display time should be formatted on the frontend.
 
 ### API and realtime endpoints
 

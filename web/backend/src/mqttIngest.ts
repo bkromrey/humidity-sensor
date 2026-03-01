@@ -1,7 +1,6 @@
 import mqtt, { MqttClient } from "mqtt";
 import { DbCollections } from "./db";
 import { config } from "./config";
-import { toLocalIsoString } from "./time";
 import { SensorHistoryDocument, SensorLatestDocument, SensorReading } from "./types";
 import { RealtimeHub } from "./realtime";
 
@@ -31,18 +30,14 @@ function parseReading(topic: string, message: Buffer): SensorReading | null {
   }
 
   const sensorId = inferSensorId(topic);
-  const backendTimezone = config.backendTimezone;
 
   const body = parsedPayload as Record<string, unknown>;
   const receivedAtUtc = new Date();
-  const receivedAtLocal = toLocalIsoString(receivedAtUtc, backendTimezone);
 
   return {
     sensorId,
     topic,
     receivedAtUtc,
-    receivedAtLocal,
-    backendTimezone,
     sourceTimestamp: typeof body.ts === "string" ? body.ts : null,
     temperatureC: parseNumber(body.temperature_c),
     temperatureF: parseNumber(body.temperature_f),

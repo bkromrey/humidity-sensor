@@ -2,8 +2,6 @@ export type SensorReading = {
   sensorId: string;
   topic: string;
   receivedAtUtc: Date;
-  receivedAtLocal: string;
-  backendTimezone: string;
   sourceTimestamp?: string | null;
   temperatureC: number | null;
   temperatureF: number | null;
