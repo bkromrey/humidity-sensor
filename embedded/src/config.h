@@ -19,13 +19,8 @@
 #define BUTTON_1 16
 #define BUTTON_2 17
 #define BUTTON_3 18
-// ===== BUTTONS =====
-#define BUTTONS_LENGTH 3
-#define BUTTON_1 16
-#define BUTTON_2 17
-#define BUTTON_3 18
 
-static const uint Buttons[BUTTONS_LENGTH] = {
+static const uint Buttons[NUM_BUTTONS] = {
     BUTTON_1,
     BUTTON_2,
     BUTTON_3
