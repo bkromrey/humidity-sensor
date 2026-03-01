@@ -44,7 +44,7 @@ type DataTableProps = {
 
 const MAIN_TABLE_HEADERS_BASE = ['Pico', 'Updated', 'Humidity', 'Light %'];
 const WEEKLY_TABLE_HEADERS_BASE = ['Slot', 'Date', 'Humidity', 'Light %'];
-const COLUMN_WIDTHS = ['33%', '19%', '16%', '16%', '16%'] as const;
+const COLUMN_WIDTHS = ['w-auto md:w-[33%]', 'w-auto md:w-[19%]', 'w-auto md:w-[16%]', 'w-auto md:w-[16%]', 'w-auto md:w-[16%]'] as const;
 
 export function DataTable({
   devices,
@@ -75,8 +75,8 @@ export function DataTable({
       <div className={TABLE_WRAP_CLASS}>
         <table className={TABLE_CLASS}>
           <colgroup>
-            {COLUMN_WIDTHS.map((width, index) => (
-              <col key={`main-col-${index}`} style={{ width }} />
+            {COLUMN_WIDTHS.map((widthClass, index) => (
+              <col key={`main-col-${index}`} className={widthClass} />
             ))}
           </colgroup>
           <thead>
@@ -123,8 +123,8 @@ export function DataTable({
 
                         <table className={NESTED_TABLE_CLASS}>
                           <colgroup>
-                            {COLUMN_WIDTHS.map((width, index) => (
-                              <col key={`history-col-${index}`} style={{ width }} />
+                            {COLUMN_WIDTHS.map((widthClass, index) => (
+                              <col key={`history-col-${index}`} className={widthClass} />
                             ))}
                           </colgroup>
                           <thead>
