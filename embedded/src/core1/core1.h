@@ -15,6 +15,7 @@
 #include "../data_flow/data_flow.h"
 #include "../hardware/photores.h"
 #include "../hardware/dht20_sensor.h"
+#include "../mqtt/mqtt.h"
 
 // Main Process
 void Core_1_Entry(void);

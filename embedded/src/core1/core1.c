@@ -1,8 +1,6 @@
 #include "core1.h"
 
-#define CORE1_TIMER 1000
-
-#define PHOTORES_GPIO_PIN 26 // this needs to be put into config.h
+#define CORE1_TIMER 1000 // repeat delay in ms
 
 // File Scope Datatypes
 typedef struct {
@@ -12,18 +10,21 @@ typedef struct {
 } System_Flag;
 
 // System Flag Handling
-#define NUM_SYSTEM_FLAGS 1
-#define SYSTEM_RELOAD 1 // 1000 ms
+#define NUM_SYSTEM_FLAGS 2
+#define PRODUCE_DATA_FREQUENCY 1 // 1000 ms
+#define PUBLISH_DATA_FREQUENCY 10 // how often to publish, in seconds
 
 // Prototypes
 void Produce_Data(void);
+void Transmit_Data(void);
 
 // Globals
 Payload_Data Sensor_Data; // for exchanging data to Core0
 
 // Core_1 System Flag Array
 System_Flag Core_1_Flags[NUM_SYSTEM_FLAGS] = {
- {0, SYSTEM_RELOAD, Produce_Data}, // Sample Data Flag
+ {0, PRODUCE_DATA_FREQUENCY, Produce_Data}, // Sample Data Flag
+ {0, PUBLISH_DATA_FREQUENCY, Transmit_Data} // Send Data to Web App Flag 
 };
 
 /**
@@ -50,6 +51,19 @@ void Produce_Data(void){
     // If Data is Valid
     multicore_fifo_push_blocking((uint32_t) data);
     bool response = multicore_fifo_pop_blocking(); // block until the packet is read, not used for anything yet
+
+}
+
+/** Calls the Publish_Data function in the mqtt module to actually send the
+ * data to the MQTT broker to be ingested by the web application.
+ *
+ * The Publish_Data function handles validity checking so it need not be
+ * handled here.
+ */
+void Transmit_Data(void){
+      
+  Publish_Data((const Payload_Data *)&Sensor_Data);
+
 }
 
 /**

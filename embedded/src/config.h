@@ -19,13 +19,8 @@
 #define BUTTON_1 16
 #define BUTTON_2 17
 #define BUTTON_3 18
-// ===== BUTTONS =====
-#define BUTTONS_LENGTH 3
-#define BUTTON_1 16
-#define BUTTON_2 17
-#define BUTTON_3 18
 
-static const uint Buttons[BUTTONS_LENGTH] = {
+static const uint Buttons[NUM_BUTTONS] = {
     BUTTON_1,
     BUTTON_2,
     BUTTON_3
@@ -63,7 +58,6 @@ static const uint32_t Led_Pins[LED_LENGTH] = {
 
 
 // ===== ADC =====
-#define PHOTORESISTOR_ADC 26
 #define ADC_PIN_MAX 29
 #define ADC_PIN_MIN 26
 #define ADC_PIN_OFFSET 26 // pins 26 - 29 are ADC pins on the pico
