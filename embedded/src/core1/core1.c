@@ -2,9 +2,6 @@
 
 #define CORE1_TIMER 1000 // repeat delay in ms
 
-//TODO: move to config.h
-#define PHOTORES_GPIO_PIN 26 // this needs to be put into config.h
-
 // File Scope Datatypes
 typedef struct {
     volatile uint32_t disabled_count;
