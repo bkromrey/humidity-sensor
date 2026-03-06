@@ -4,7 +4,6 @@ import { WeeklyChart } from './WeeklyChart';
 import type {
   DetailMode,
   DeviceReading,
-  HistoryRange,
   TemperatureUnit,
   WeeklyPoint,
 } from '../types/monitoring';
@@ -28,8 +27,6 @@ type DeviceDetailPanelProps = {
   viewMode: DetailMode;
   // weekly points for chart mode
   weeklyData: WeeklyPoint[];
-  // selected data interval mode
-  historyRange: HistoryRange;
   // change detail mode from segmented control
   onViewModeChange: (mode: DetailMode) => void;
   // selected global temperature unit
@@ -139,7 +136,6 @@ export function DeviceDetailPanel({
   device,
   viewMode,
   weeklyData,
-  historyRange,
   onViewModeChange,
   temperatureUnit,
 }: DeviceDetailPanelProps) {
@@ -196,7 +192,6 @@ export function DeviceDetailPanel({
           // week trend chart
           <WeeklyChart
             data={weeklyData}
-            historyRange={historyRange}
             temperatureUnit={temperatureUnit}
           />
         )}

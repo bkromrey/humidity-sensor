@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { SegmentedControl } from './SegmentedControl';
-import type { ChartMetric, HistoryRange, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import type { ChartMetric, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
 import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   AXIS_LABEL_FONT_SIZE,
@@ -20,7 +20,6 @@ import {
 
 type WeeklyChartProps = {
   data: WeeklyPoint[];
-  historyRange: HistoryRange;
   temperatureUnit: TemperatureUnit;
 };
 
@@ -32,7 +31,6 @@ const metricConfigBase = {
 
 export function WeeklyChart({
   data,
-  historyRange,
   temperatureUnit,
 }: WeeklyChartProps) {
   const [selectedMetric, setSelectedMetric] = useState<ChartMetric>('temperatureC');
@@ -53,7 +51,7 @@ export function WeeklyChart({
   return (
     <div className={CHART_WRAP_CLASS}>
       <p className={HISTORY_HINT_CLASS}>
-        {historyRange === '1d' ? 'Last 24h (3h average)' : 'Last 7 days (daily average)'}
+        Last 24h (hourly values)
       </p>
       <SegmentedControl
         value={selectedMetric}

@@ -26,4 +26,3 @@ export type PanelMode = 'normal' | 'table';
 export type DetailMode = 'now' | 'chart';
 export type ChartMetric = 'temperatureC' | 'humidity' | 'lightPercent';
 export type TemperatureUnit = 'celsius' | 'fahrenheit';
-export type HistoryRange = '1d' | '1w';
