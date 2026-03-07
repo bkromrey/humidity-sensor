@@ -54,6 +54,11 @@ enum connected_to_broker{
   FAILED_TO_CONNECT
 } connected_to_broker = NOT_YET_INITIALIZED;
 
+enum publish_status{
+  CURRENTLY_PUBLISHING,
+  IDLE
+} publish_status = IDLE;
+
 
 // ---------------------------------------------------------------------------
 // PUBLIC FUNCTIONS
@@ -73,7 +78,7 @@ enum connected_to_broker{
  * @envar PICO_MQTT_USER   The username to use to authenticate this MQTT client
  * @envar PICO_MQTT_PASS   The password to use to authenticate this MQTT client
  *
- * Returns 0 on a successful init, otherwise returns 1.
+ * Returns 0 on a successful init, otherwise returns 1. 
  */
 int Init_Network_Comms(){
 
@@ -121,20 +126,10 @@ int Init_Network_Comms(){
  * Returns 0 if successful or 1 if an error is encountered.
  */
 int Publish_Data(const Payload_Data *Sensor_Data){
-  
+
+  // only attempt if networking enabled
   if (wireless_connectivity == WIFI_DISABLED)
     return 1;
-
-  if (generate_payload(Sensor_Data, data_as_json)){
-    #if DEBUG_MQTT
-    printf("MQTT payload not generated successfully\n");
-    #endif
-    return 1; 
-  }
-  
-  #if DEBUG_MQTT
-  printf("%s\n", data_as_json);
-  #endif
 
   // validate wifi connection
   if (cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != 1){
@@ -159,16 +154,48 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   }
 
   #if DEBUG_MQTT
-  printf("publishing data using topic %s\n\n", PICO_SENSOR_ID);
+  printf("\n\npublishing data using topic %s\n", PICO_SENSOR_ID);
   #endif
   
-  // publish the data to mqtt broker
-  if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
-    return 1;
+  // only publish data if previous data is done sending, otherwise we get lwIP pbuf panics
+  if (publish_status == IDLE){
+
+    if (generate_payload(Sensor_Data, data_as_json)){
+      #if DEBUG_MQTT
+      printf("MQTT payload not generated successfully\n");
+      #endif
+      return 1; 
+    }
+  
     #if DEBUG_MQTT
-    printf("ERROR: Unable to publish data to MQTT broker.\n");
+    printf("%s\n", data_as_json);
+    #endif
+    
+    cyw43_arch_lwip_begin();
+
+    if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
+      cyw43_arch_lwip_end();
+
+      #if DEBUG_MQTT
+      printf("ERROR: Unable to publish data to MQTT broker.\n");
+      #endif
+
+      return 1;
+    }
+
+    cyw43_arch_lwip_end();
+
+    publish_status = CURRENTLY_PUBLISHING;
+    } else {
+
+    #if DEBUG_MQTT
+    printf("publish_status = CURRENTLY_PUBLISHING\n");
     #endif
   }
+    
+  #if DEBUG_MQTT
+  printf("\n");
+  #endif
 
   return 0;
 
@@ -297,7 +324,12 @@ int init_mqtt(){
  * @param err         Error enum value indicating success or failure.
  */
 void callback_mqtt_publish(void *arg, err_t err){
+
+
+  publish_status = IDLE;
+
   #if DEBUG_MQTT
+  printf("publish_status set to IDLE\n");
   if (err != ERR_OK)
     printf("ERROR: Failed to publish mqtt message!\n");
   #endif
