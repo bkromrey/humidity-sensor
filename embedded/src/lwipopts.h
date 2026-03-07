@@ -4,7 +4,10 @@
 
 #define MQTT_CONNECT_TIMOUT   60     // seconds
 
-
+#define MEM_SIZE 8000   // increase from default to prevent transmission failures
+#define MEM_STATS 1
+#define MEMP_STATS 1
+#define SYS_STATS 1
 
 // ---------------------------------------------------------------------------
 // LWIP OPTIONS DEFINED BELOW ADAPTED FROM THE SDK'S 'PICO-EXAMPLES'
@@ -33,7 +36,6 @@
 #define MEM_LIBC_MALLOC             0
 #endif
 #define MEM_ALIGNMENT               4
-#define MEM_SIZE                    4000
 #define MEMP_NUM_TCP_SEG            32
 #define MEMP_NUM_ARP_QUEUE          10
 #define PBUF_POOL_SIZE              24

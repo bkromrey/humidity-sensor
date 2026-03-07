@@ -126,7 +126,7 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   if (wireless_connectivity == WIFI_DISABLED)
     return 1;
 
-  char data_as_json[MAX_PAYLOAD_SIZE];
+  static char data_as_json[MAX_PAYLOAD_SIZE];
   if (generate_payload(Sensor_Data, data_as_json)){
     #if DEBUG_MQTT
     printf("MQTT payload not generated successfully\n");
@@ -135,7 +135,7 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   }
   
   #if DEBUG_MQTT
-  printf("%s\n\n", data_as_json);
+  printf("%s\n", data_as_json);
   #endif
 
   // validate wifi connection
@@ -161,7 +161,7 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   }
 
   #if DEBUG_MQTT
-  printf("publishing data using topic %s\n", PICO_SENSOR_ID);
+  printf("publishing data using topic %s\n\n", PICO_SENSOR_ID);
   #endif
   
   // publish the data to mqtt broker
