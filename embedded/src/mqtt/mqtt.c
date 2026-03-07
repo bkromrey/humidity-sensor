@@ -39,6 +39,7 @@
 
 static mqtt_client_t *mqtt_client;
 static struct mqtt_connect_client_info_t client_info;
+static char data_as_json[MAX_PAYLOAD_SIZE];
 
 enum wireless_connectivity{
   WIFI_NOT_INIT,
@@ -75,8 +76,6 @@ enum connected_to_broker{
  * Returns 0 on a successful init, otherwise returns 1.
  */
 int Init_Network_Comms(){
-
-
 
   // initialize & connect to wifi
   if (init_wifi()){
@@ -126,7 +125,6 @@ int Publish_Data(const Payload_Data *Sensor_Data){
   if (wireless_connectivity == WIFI_DISABLED)
     return 1;
 
-  static char data_as_json[MAX_PAYLOAD_SIZE];
   if (generate_payload(Sensor_Data, data_as_json)){
     #if DEBUG_MQTT
     printf("MQTT payload not generated successfully\n");

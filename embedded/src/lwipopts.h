@@ -5,6 +5,8 @@
 #define MQTT_CONNECT_TIMOUT   60     // seconds
 
 #define MEM_SIZE 8000   // increase from default to prevent transmission failures
+
+// statistics
 #define MEM_STATS 1
 #define MEMP_STATS 1
 #define SYS_STATS 1
