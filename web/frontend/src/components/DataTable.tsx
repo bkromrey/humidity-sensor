@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import type { DeviceReading, HistoryRange, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
+import type { DeviceReading, TemperatureUnit, WeeklyPoint } from '../types/monitoring';
 import { temperatureByUnit, temperatureUnitSymbol } from '../utils/sensorMath';
 import {
   CELL_CLASS,
@@ -36,8 +36,6 @@ type DataTableProps = {
   selectedId: string;
   // weekly points for selected device
   weeklyData: WeeklyPoint[];
-  // selected data interval mode
-  historyRange: HistoryRange;
   // selected global temperature unit
   temperatureUnit: TemperatureUnit;
 };
@@ -50,14 +48,13 @@ export function DataTable({
   devices,
   selectedId,
   weeklyData,
-  historyRange,
   temperatureUnit,
 }: DataTableProps) {
   // fallback to first item if id is not found
   const selectedDevice = devices.find((device) => device.id === selectedId) ?? devices[0];
   const temperatureHeader = `Temp ${temperatureUnitSymbol(temperatureUnit)}`;
   const mainTableHeaders = [MAIN_TABLE_HEADERS_BASE[0], MAIN_TABLE_HEADERS_BASE[1], temperatureHeader, ...MAIN_TABLE_HEADERS_BASE.slice(2)];
-  const historyPrimaryHeader = historyRange === '1d' ? 'Time' : 'Day';
+  const historyPrimaryHeader = 'Time';
   const weeklyTableHeaders = [
     WEEKLY_TABLE_HEADERS_BASE[1],
     historyPrimaryHeader,
@@ -116,9 +113,7 @@ export function DataTable({
                     <tr className={NESTED_WRAP_ROW_CLASS}>
                       <td colSpan={5} className={NESTED_SECTION_CELL_CLASS}>
                         <p className={WEEKLY_TITLE_CLASS}>
-                          {historyRange === '1d'
-                            ? `Last 24h history (3h average) for ${device.name}`
-                            : `Last 7 days history (daily average) for ${device.name}`}
+                          {`Last 24h history (hourly values) for ${device.name}`}
                         </p>
 
                         <table className={NESTED_TABLE_CLASS}>

@@ -2,18 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from './components/DataTable';
 import { DeviceDetailPanel } from './components/DeviceDetailPanel';
 import { DeviceSidebar } from './components/DeviceSidebar';
-import { HistoryRangeToggle } from './components/HistoryRangeToggle';
 import { SegmentedControl } from './components/SegmentedControl';
 import { TemperatureToggle } from './components/TemperatureToggle';
 import { ThemeToggle } from './components/ThemeToggle';
-import type {
-  DetailMode,
-  DeviceReading,
-  HistoryRange,
-  PanelMode,
-  TemperatureUnit,
-  WeeklyPoint,
-} from './types/monitoring';
+import type { DetailMode, DeviceReading, PanelMode, TemperatureUnit, WeeklyPoint } from './types/monitoring';
 import {
   CONTAINER_CLASS,
   CONTENT_GRID_NORMAL_CLASS,
@@ -61,7 +53,26 @@ type RawHistoryPoint = {
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
-const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3001/ws/sensors';
+
+function resolveWebSocketUrl(): string {
+  const configuredWsUrl = import.meta.env.VITE_WS_URL;
+  if (configuredWsUrl) {
+    const parsed = new URL(configuredWsUrl, window.location.origin);
+    if (window.location.protocol === 'https:' && parsed.protocol === 'ws:') {
+      parsed.protocol = 'wss:';
+    }
+    return parsed.toString();
+  }
+
+  const parsedApiBase = new URL(API_BASE, window.location.origin);
+  parsedApiBase.protocol = parsedApiBase.protocol === 'https:' ? 'wss:' : 'ws:';
+  parsedApiBase.pathname = '/ws/sensors';
+  parsedApiBase.search = '';
+  parsedApiBase.hash = '';
+  return parsedApiBase.toString();
+}
+
+const WS_URL = resolveWebSocketUrl();
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
 function asNumber(value: unknown): number {
@@ -132,42 +143,27 @@ function toRawHistoryPoint(item: ApiHistoryPoint): RawHistoryPoint {
   };
 }
 
-function average(values: Array<number | null>): number {
-  const validValues = values.filter((value): value is number => typeof value === 'number');
-  if (validValues.length === 0) return 0;
-  const total = validValues.reduce((sum, value) => sum + value, 0);
-  return total / validValues.length;
-}
-
-function toDayStart(timestamp: number): number {
-  const date = new Date(timestamp);
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-}
-
-function toAggregatedPoint(bucketTs: number, bucketPoints: RawHistoryPoint[], historyRange: HistoryRange): WeeklyPoint {
+function toAggregatedPoint(bucketTs: number, bucketPoints: RawHistoryPoint[]): WeeklyPoint {
+  const latestPoint = bucketPoints.reduce((latest, point) => (point.ts > latest.ts ? point : latest));
   return {
     ts: bucketTs,
-    label:
-      historyRange === '1d'
-        ? toTimeLabel(bucketTs)
-        : new Date(bucketTs).toLocaleDateString('en-US', { weekday: 'short' }),
+    label: toTimeLabel(bucketTs),
     updatedAt: toDateLabel(bucketTs),
-    temperatureC: average(bucketPoints.map((point) => point.temperatureC)),
-    temperatureF: average(bucketPoints.map((point) => point.temperatureF)),
-    humidity: clamp(average(bucketPoints.map((point) => point.humidity)), 0, 100),
-    lightPercent: clamp(average(bucketPoints.map((point) => point.light)), 0, 100),
+    temperatureC: asNumber(latestPoint.temperatureC),
+    temperatureF: asNumber(latestPoint.temperatureF),
+    humidity: asPercent(latestPoint.humidity),
+    lightPercent: asPercent(latestPoint.light),
   };
 }
 
-function buildHistoryPoints(rawPoints: RawHistoryPoint[], historyRange: HistoryRange): WeeklyPoint[] {
+function buildHistoryPoints(rawPoints: RawHistoryPoint[]): WeeklyPoint[] {
   if (rawPoints.length === 0) return [];
 
   const bucketMap = new Map<number, RawHistoryPoint[]>();
-  const threeHoursMs = 3 * 60 * 60 * 1000;
+  const oneHourMs = 60 * 60 * 1000;
 
   for (const point of rawPoints) {
-    const bucketTs =
-      historyRange === '1d' ? Math.floor(point.ts / threeHoursMs) * threeHoursMs : toDayStart(point.ts);
+    const bucketTs = Math.floor(point.ts / oneHourMs) * oneHourMs;
     const bucket = bucketMap.get(bucketTs);
     if (bucket) {
       bucket.push(point);
@@ -178,7 +174,7 @@ function buildHistoryPoints(rawPoints: RawHistoryPoint[], historyRange: HistoryR
 
   return Array.from(bucketMap.entries())
     .sort(([leftTs], [rightTs]) => leftTs - rightTs)
-    .map(([bucketTs, bucketPoints]) => toAggregatedPoint(bucketTs, bucketPoints, historyRange));
+    .map(([bucketTs, bucketPoints]) => toAggregatedPoint(bucketTs, bucketPoints));
 }
 
 export default function App() {
@@ -187,7 +183,6 @@ export default function App() {
   const [historyByDevice, setHistoryByDevice] = useState<Record<string, WeeklyPoint[]>>({});
   const [selectedId, setSelectedId] = useState('');
   const [panelMode, setPanelMode] = useState<PanelMode>('normal');
-  const [historyRange, setHistoryRange] = useState<HistoryRange>('1d');
   const [detailMode, setDetailMode] = useState<DetailMode>('now');
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>('celsius');
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -264,10 +259,7 @@ export default function App() {
 
     async function loadHistory(): Promise<void> {
       const now = new Date();
-      const from =
-        historyRange === '1d'
-          ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          : new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       const query = new URLSearchParams({
         from: from.toISOString(),
         to: now.toISOString(),
@@ -276,12 +268,19 @@ export default function App() {
       if (!response.ok) return;
       const payload = (await response.json()) as ApiHistoryPoint[];
       const rawPoints = payload.reverse().map(toRawHistoryPoint);
-      const points = buildHistoryPoints(rawPoints, historyRange);
+      const points = buildHistoryPoints(rawPoints);
       setHistoryByDevice((current) => ({ ...current, [sensorId]: points }));
     }
 
     void loadHistory();
-  }, [historyRange, selectedDevice]);
+    const pollId = window.setInterval(() => {
+      void loadHistory();
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(pollId);
+    };
+  }, [selectedDevice]);
 
   return (
     <main className={PAGE_CLASS}>
@@ -299,11 +298,6 @@ export default function App() {
               className={TWO_COL_SEGMENT_CLASS}
             />
             <div className={MINI_TOGGLES_CLASS}>
-              <HistoryRangeToggle
-                historyRange={historyRange}
-                onToggle={() => setHistoryRange((prev) => (prev === '1d' ? '1w' : '1d'))}
-                className="ml-2"
-              />
               <TemperatureToggle
                 temperatureUnit={temperatureUnit}
                 onToggle={toggleTemperatureUnit}
@@ -336,7 +330,6 @@ export default function App() {
                 device={selectedDevice}
                 viewMode={detailMode}
                 weeklyData={weeklyData}
-                historyRange={historyRange}
                 onViewModeChange={setDetailMode}
                 temperatureUnit={temperatureUnit}
               />
@@ -345,7 +338,6 @@ export default function App() {
                 devices={devices}
                 selectedId={selectedId}
                 weeklyData={weeklyData}
-                historyRange={historyRange}
                 temperatureUnit={temperatureUnit}
               />
             )}
