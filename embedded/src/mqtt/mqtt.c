@@ -9,7 +9,7 @@
 #define MQTT_RETAIN 0
 #define MAX_PAYLOAD_SIZE 100      // number of chars for JSON string
 //
-#define WAIT_ITERATIONS 3    // if publish in progress, how many cycles of
+#define WAIT_ITERATIONS 3         // if publish in progress, how many cycles of
                                   // publish data are skipped before attempting 
                                   // to drop and reconnect to the MQTT server 
 
