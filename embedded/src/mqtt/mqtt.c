@@ -1,6 +1,6 @@
 #include "mqtt.h"
 
-#define DEBUG_MQTT 1
+#define DEBUG_MQTT 0
 
 #define WIFI_TIMEOUT 30000       // how many ms to wait before failing to connect (30s)
 #define PICO_MQTT_PORT 1883       // 1883 is the standard MQTT port
@@ -8,6 +8,10 @@
 #define MQTT_QOS 0
 #define MQTT_RETAIN 0
 #define MAX_PAYLOAD_SIZE 100      // number of chars for JSON string
+//
+#define WAIT_ITERATIONS 3         // if publish in progress, how many cycles of
+                                  // publish data are skipped before attempting 
+                                  // to drop and reconnect to the MQTT server 
 
 #ifndef PICO_MQTT_SERVER
 #error Required to define PICO_MQTT_SERVER
@@ -39,6 +43,8 @@
 
 static mqtt_client_t *mqtt_client;
 static struct mqtt_connect_client_info_t client_info;
+static char data_as_json[MAX_PAYLOAD_SIZE];
+static int waiting_counter;
 
 enum wireless_connectivity{
   WIFI_NOT_INIT,
@@ -52,6 +58,11 @@ enum connected_to_broker{
   CONNECTED,
   FAILED_TO_CONNECT
 } connected_to_broker = NOT_YET_INITIALIZED;
+
+enum publish_status{
+  CURRENTLY_PUBLISHING,
+  IDLE
+} publish_status = IDLE;
 
 
 // ---------------------------------------------------------------------------
@@ -72,11 +83,9 @@ enum connected_to_broker{
  * @envar PICO_MQTT_USER   The username to use to authenticate this MQTT client
  * @envar PICO_MQTT_PASS   The password to use to authenticate this MQTT client
  *
- * Returns 0 on a successful init, otherwise returns 1.
+ * Returns 0 on a successful init, otherwise returns 1. 
  */
 int Init_Network_Comms(){
-
-
 
   // initialize & connect to wifi
   if (init_wifi()){
@@ -105,6 +114,9 @@ int Init_Network_Comms(){
     return 1;
   }
 
+  publish_status = IDLE;
+  waiting_counter = 0;
+
   return 0;
 }
 
@@ -122,21 +134,10 @@ int Init_Network_Comms(){
  * Returns 0 if successful or 1 if an error is encountered.
  */
 int Publish_Data(const Payload_Data *Sensor_Data){
-  
+
+  // only attempt if networking enabled
   if (wireless_connectivity == WIFI_DISABLED)
     return 1;
-
-  char data_as_json[MAX_PAYLOAD_SIZE];
-  if (generate_payload(Sensor_Data, data_as_json)){
-    #if DEBUG_MQTT
-    printf("MQTT payload not generated successfully\n");
-    #endif
-    return 1; 
-  }
-  
-  #if DEBUG_MQTT
-  printf("%s\n\n", data_as_json);
-  #endif
 
   // validate wifi connection
   if (cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != 1){
@@ -154,23 +155,85 @@ int Publish_Data(const Payload_Data *Sensor_Data){
     #if DEBUG_MQTT
     printf("ERROR SENDING DATA: MQTT client no longer connected\n");
     #endif
-    
-    init_mqtt();
-  
+          
+    // if the reconnect fails, disable networking connectivity until a reboot
+    if (reconnect_mqtt()){
+        wireless_connectivity = WIFI_DISABLED;
+
+        #if DEBUG_MQTT
+        printf("ERROR: Failed to reconnect to MQTT server, please reboot Pico to restore network connectivity.\n");
+        #endif 
+
     return 1;
+    }
   }
 
   #if DEBUG_MQTT
-  printf("publishing data using topic %s\n", PICO_SENSOR_ID);
+  printf("\n\npublishing data using topic %s\n", PICO_SENSOR_ID);
   #endif
   
-  // publish the data to mqtt broker
-  if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
-    return 1;
+  // PUBLISHING STATUS IS IDLE - SEND NEW DATA WHEN IDLE (otherwise we get lwIP pbuf panics)
+  if (publish_status == IDLE){
+
+    if (generate_payload(Sensor_Data, data_as_json)){
+      #if DEBUG_MQTT
+      printf("ERROR: MQTT payload not generated successfully\n");
+      #endif
+      return 1; 
+    }
+  
     #if DEBUG_MQTT
-    printf("ERROR: Unable to publish data to MQTT broker.\n");
+    printf("%s\n", data_as_json);
     #endif
+    
+    cyw43_arch_lwip_begin();
+
+    if (mqtt_publish(mqtt_client, PICO_SENSOR_ID, data_as_json, strlen(data_as_json), MQTT_QOS, MQTT_RETAIN, callback_mqtt_publish, 0) != ERR_OK){
+      cyw43_arch_lwip_end();
+
+      #if DEBUG_MQTT
+      printf("ERROR: Unable to publish data to MQTT broker.\n");
+      #endif
+
+      return 1;
+    }
+
+    cyw43_arch_lwip_end();
+
+    publish_status = CURRENTLY_PUBLISHING;
+  } 
+
+  // PUBLISHING STATUS IS IN PROGRESS - DO NOT SEND NEW DATA
+  else {
+    
+    // counter to keep track of 
+    waiting_counter++;
+
+    #if DEBUG_MQTT
+    printf("publish_status = CURRENTLY_PUBLISHING\n");
+    printf("waiting counter: %d\n", waiting_counter);
+    #endif
+    
+    if (waiting_counter > WAIT_ITERATIONS){
+
+      #if DEBUG_MQTT
+      printf("Detected that MQTT message is possibly stuck sending, attempting to reconnect to mqtt server\n");
+      #endif 
+      
+      // if the reconnect fails, disable networking connectivity until a reboot
+      if (reconnect_mqtt()){
+        wireless_connectivity = WIFI_DISABLED;
+
+        #if DEBUG_MQTT
+        printf("ERROR: Failed to reconnect to MQTT server, please reboot Pico to restore network connectivity.\n");
+        #endif 
+      }
+    }
   }
+    
+  #if DEBUG_MQTT
+  printf("\n");
+  #endif
 
   return 0;
 
@@ -287,6 +350,46 @@ int init_mqtt(){
   return 0;
 }
 
+/* Called when the MQTT client hasn't recieved the callback from the MQTT publish
+ * request for several iterations (as defined by WAIT_ITERATIONS at the top of 
+ * this file).
+ * 
+ * Attempts to disconnect & reconnect to the MQTT server. If successful, it resets
+ * the waiting_counter & publish status to indicate that the client is ready to
+ * send the next MQTT packet. 
+ *
+ * Returns 0 if the reconnect was successful or 1 otherwise.
+ */
+ int reconnect_mqtt(){
+  #if DEBUG_MQTT
+  printf("Attempting to reconnect to the MQTT server...\n");
+  #endif
+  
+  // drop the connection to the MQTT server
+  cyw43_arch_lwip_begin();
+  mqtt_disconnect(mqtt_client);
+  cyw43_arch_lwip_end();
+  connected_to_broker = NOT_YET_INITIALIZED;
+
+
+  // reconnect to the MQTT server and block (up to MQTT timeout of 60s, or as
+  // otherwise defined in lwipopts) until callback indicates server has reconnected
+  init_mqtt();
+
+  while (connected_to_broker == NOT_YET_INITIALIZED)
+    sleep_ms(10);
+
+  if (connected_to_broker == FAILED_TO_CONNECT){
+    #if DEBUG_MQTT
+    printf("Failed to reconnect to MQTT broker at %s\n", PICO_MQTT_SERVER);
+    #endif
+    return 1;
+  }
+
+  // sending in progress counters are reset in the connect callback
+
+  return 0; 
+}
 
 
 /* Callback function for the mqtt_publish function. This function is called
@@ -299,7 +402,13 @@ int init_mqtt(){
  * @param err         Error enum value indicating success or failure.
  */
 void callback_mqtt_publish(void *arg, err_t err){
+
+  // reset in progress markers
+  publish_status = IDLE;
+  waiting_counter = 0;
+
   #if DEBUG_MQTT
+  printf("publish_status set to IDLE\n");
   if (err != ERR_OK)
     printf("ERROR: Failed to publish mqtt message!\n");
   #endif
@@ -321,10 +430,13 @@ void callback_mqtt_publish(void *arg, err_t err){
   */
 void callback_mqtt_connect(mqtt_client_t *mqtt_client, void *arg, mqtt_connection_status_t status){
   if (status == MQTT_CONNECT_ACCEPTED){
-  #if DEBUG_MQTT
-  printf("Successfully connected to MQTT server!\n");
-  #endif
-  connected_to_broker = CONNECTED;
+    #if DEBUG_MQTT
+    printf("Successfully connected to MQTT server!\n");
+    #endif
+    connected_to_broker = CONNECTED;
+    
+    publish_status = IDLE;
+    waiting_counter = 0;
   } else 
     connected_to_broker = FAILED_TO_CONNECT;
   
