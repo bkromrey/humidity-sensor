@@ -14,9 +14,9 @@
 #endif
 #define TCP_QLEN_DEBUG                LWIP_DBG_OFF  // LWIP_DBG_ON
 #define PBUF_DEBUG                    LWIP_DBG_OFF    //  LWIP_DBG_ON
-#define MQTT_DEBUG                    LWIP_DBG_ON
+#define MQTT_DEBUG                    LWIP_DBG_OFF
 #define LWIP_DBG_MIN_LEVEL            LWIP_DBG_LEVEL_ALL
-#define LWIP_DBG_TYPES_ON             LWIP_DBG_ON
+#define LWIP_DBG_TYPES_ON             LWIP_DBG_OFF
 
 // ---------------------------------------------------------------------------
 // LWIP OPTIONS DEFINED BELOW ADAPTED FROM THE SDK'S 'PICO-EXAMPLES'

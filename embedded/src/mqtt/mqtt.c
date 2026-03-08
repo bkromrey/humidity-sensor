@@ -1,6 +1,6 @@
 #include "mqtt.h"
 
-#define DEBUG_MQTT 1
+#define DEBUG_MQTT 0
 
 #define WIFI_TIMEOUT 30000       // how many ms to wait before failing to connect (30s)
 #define PICO_MQTT_PORT 1883       // 1883 is the standard MQTT port
@@ -362,7 +362,7 @@ int init_mqtt(){
  */
  int reconnect_mqtt(){
   #if DEBUG_MQTT
-  printf("Attempting to reconnec to the MQTT server...\n");
+  printf("Attempting to reconnect to the MQTT server...\n");
   #endif
   
   // drop the connection to the MQTT server
