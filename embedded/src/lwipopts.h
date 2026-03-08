@@ -6,10 +6,17 @@
 
 #define MEM_SIZE 8000   // increase from default to prevent transmission failures
 
-// statistics
-#define MEM_STATS 1
-#define MEMP_STATS 1
-#define SYS_STATS 1
+// statistics & logging for debugging purposes
+#ifndef NDEBUG
+#define LWIP_DEBUG                  1
+#define LWIP_STATS                  1
+#define LWIP_STATS_DISPLAY          1
+#endif
+#define TCP_QLEN_DEBUG                LWIP_DBG_OFF  // LWIP_DBG_ON
+#define PBUF_DEBUG                    LWIP_DBG_OFF    //  LWIP_DBG_ON
+#define MQTT_DEBUG                    LWIP_DBG_ON
+#define LWIP_DBG_MIN_LEVEL            LWIP_DBG_LEVEL_ALL
+#define LWIP_DBG_TYPES_ON             LWIP_DBG_ON
 
 // ---------------------------------------------------------------------------
 // LWIP OPTIONS DEFINED BELOW ADAPTED FROM THE SDK'S 'PICO-EXAMPLES'
@@ -37,10 +44,11 @@
 // MEM_LIBC_MALLOC is incompatible with non polling versions
 #define MEM_LIBC_MALLOC             0
 #endif
+
 #define MEM_ALIGNMENT               4
 #define MEMP_NUM_TCP_SEG            32
 #define MEMP_NUM_ARP_QUEUE          10
-#define PBUF_POOL_SIZE              24
+#define PBUF_POOL_SIZE              24        // number of buffers in the pbuf pool
 #define LWIP_ARP                    1
 #define LWIP_ETHERNET               1
 #define LWIP_ICMP                   1
@@ -53,10 +61,12 @@
 #define LWIP_NETIF_LINK_CALLBACK    1
 #define LWIP_NETIF_HOSTNAME         1
 #define LWIP_NETCONN                0
-#define MEM_STATS                   0
-#define SYS_STATS                   0
-#define MEMP_STATS                  0
-#define LINK_STATS                  0
+
+#define MEM_STATS                   1 
+#define SYS_STATS                   1
+#define MEMP_STATS                  1
+#define LINK_STATS                  1
+
 #define LWIP_CHKSUM_ALGORITHM       3
 #define LWIP_DHCP                   1
 #define LWIP_IPV4                   1

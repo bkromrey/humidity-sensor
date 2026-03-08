@@ -16,6 +16,7 @@ int Publish_Data(const Payload_Data *Sensor_Data);
 // Initialization Helper Functions
 int init_wifi();
 int init_mqtt();
+int reconnect_mqtt();
 
 // Callback Functions used by lwIP MQTT Functions
 void callback_mqtt_publish(void *arg, err_t err);
