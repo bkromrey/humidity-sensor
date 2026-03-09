@@ -15,9 +15,11 @@ Team: Brianna Kromrey, John David Lopez, Eugenia Uvarov
 │   └── src
 │       ├── CMakeLists.txt
 │       ├── main.c
-│       ├── hardware/    # buttons, LED array drivers
 │       ├── core1/       # core1 entry + logic
-│       └── data_flow/   # shared data types
+│       ├── data_flow/   # shared data types
+│       ├── hardware/    # buttons, sensors, LED array drivers
+│       ├── mqtt/        # network communications
+│       └── ui/          # LED & LCD display logic
 ├── web
 │   ├── frontend         # React + Vite + TypeScript
 │   └── backend          # Node.js + Express (MongoDB later)
